@@ -18,7 +18,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended(route('dashboard-analytics')); // Ajusta al dashboard de Materio
+            return redirect()->route('dashboard-analytics');
         }
 
         return back()->withErrors([

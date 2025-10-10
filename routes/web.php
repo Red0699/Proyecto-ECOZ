@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
+// Controladores de la plantilla Materio
 use App\Http\Controllers\dashboard\Analytics;
 use App\Http\Controllers\layouts\WithoutMenu;
 use App\Http\Controllers\layouts\WithoutNavbar;
@@ -44,24 +46,34 @@ use App\Http\Controllers\form_layouts\VerticalForm;
 use App\Http\Controllers\form_layouts\HorizontalForm;
 use App\Http\Controllers\tables\Basic as TablesBasic;
 
-
+// Tus controladores
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\UserController; // <-- 1. IMPORTAMOS EL NUEVO CONTROLADOR
 
 // Login (vista + acción POST)
 Route::get('/login', function () {
     return view('content.authentications.auth-login-basic');
 })->name('login');
-
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
 // Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// --- GRUPO PARA USUARIOS AUTENTICADOS ---
 Route::middleware(['auth'])->group(function () {
+
     Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
+
+
+    Route::middleware(['auth', 'is.admin'])->group(function () {
+        Route::resource('usuarios', UserController::class);
+    });
+
+
     // layout
     Route::get('/layouts/without-menu', [WithoutMenu::class, 'index'])->name('layouts-without-menu');
     Route::get('/layouts/without-navbar', [WithoutNavbar::class, 'index'])->name('layouts-without-navbar');
+    // ... (el resto de las rutas de la plantilla Materio van aquí sin cambios)
     Route::get('/layouts/fluid', [Fluid::class, 'index'])->name('layouts-fluid');
     Route::get('/layouts/container', [Container::class, 'index'])->name('layouts-container');
     Route::get('/layouts/blank', [Blank::class, 'index'])->name('layouts-blank');

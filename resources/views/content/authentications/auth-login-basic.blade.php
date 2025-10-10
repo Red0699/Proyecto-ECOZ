@@ -72,10 +72,7 @@
           
         </div>
       </div>
-      <!-- /Login -->
-      <img src="{{asset('assets/img/illustrations/BlueTree.png')}}" alt="auth-tree" class="authentication-image-object-left d-none d-lg-block">
-      <img src="{{asset('assets/img/illustrations/auth-basic-mask-light.png')}}" class="authentication-image d-none d-lg-block" height="182" alt="triangle-bg">
-      <img src="{{asset('assets/img/illustrations/GreenTree.png')}}" alt="auth-tree" class="authentication-image-object-right d-none d-lg-block">
+      
     </div>
   </div>
 </div>
