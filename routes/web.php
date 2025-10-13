@@ -48,7 +48,9 @@ use App\Http\Controllers\tables\Basic as TablesBasic;
 
 // Tus controladores
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Admin\UserController; // <-- 1. IMPORTAMOS EL NUEVO CONTROLADOR
+use App\Http\Controllers\Admin\UserController; 
+use App\Http\Controllers\HistoricalRecordController;
+use App\Http\Controllers\DataController;
 
 // Login (vista + acción POST)
 Route::get('/login', function () {
@@ -126,4 +128,11 @@ Route::middleware(['auth'])->group(function () {
 
     // tables
     Route::get('/tables/basic', [TablesBasic::class, 'index'])->name('tables-basic');
+
+    Route::get('/registro-historico', [HistoricalRecordController::class, 'index'])->name('registro-historico');
+
+    // Ruta para mostrar el formulario de carga y la tabla de datos
+    Route::get('/datos', [DataController::class, 'index'])->name('datos.index');
+    // Ruta para procesar el archivo Excel subido
+    Route::post('/datos', [DataController::class, 'store'])->name('datos.store');
 });

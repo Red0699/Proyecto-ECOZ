@@ -23,13 +23,17 @@
     "babel-loader": "^9.1.3",
     "browser-sync": "^2.29.3",
     "cross-env": "^7.0.3",
+    "datatables.net-bs5": "^2.3.4",
+    "datatables.net-buttons-bs5": "^3.2.5",
+    "datatables.net-responsive-bs5": "^3.0.7",
     "glob": "^10.4.5",
+    "jszip": "^3.10.1",
     "lodash": "^4.17.21",
+    "pdfmake": "^0.2.20",
     "postcss": "^8.4.41",
     "prettier": "3.2.5",
     "prop-types": "15.8.1",
     "resolve-url-loader": "5.0.0",
-    "sass": "~1.76.0",
     "sass-loader": "14.0.0",
     "vite": "^5.4.2"
   },
@@ -84,10 +88,10 @@
     "bootstrap": "~5.3.3",
     "highlight.js": "~11.9.0",
     "jquery": "~3.7.1",
+    "laravel-vite-plugin": "1.0.5",
     "masonry-layout": "~4.2.2",
     "node-waves": "~0.7.6",
     "perfect-scrollbar": "~1.5.5",
-    "laravel-vite-plugin": "1.0.5",
     "remixicon": "^4.3.0"
   }
 }

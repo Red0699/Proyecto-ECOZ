@@ -55,4 +55,10 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class);
     }
+
+    public function estacion()
+    {
+        // FK: users.estacion_id → estaciones.id
+        return $this->belongsTo(Estacion::class, 'estacion_id');
+    }
 }
