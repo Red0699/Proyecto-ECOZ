@@ -49,16 +49,15 @@ class User extends Authenticatable
   }
 
   /**
-     * Un usuario pertenece a un rol.
-     */
-    public function role(): BelongsTo
-    {
-        return $this->belongsTo(Role::class);
-    }
+   * Un usuario pertenece a un rol.
+   */
+  public function role(): BelongsTo
+  {
+    return $this->belongsTo(Role::class);
+  }
 
-    public function estacion()
-    {
-        // FK: users.estacion_id → estaciones.id
-        return $this->belongsTo(Estacion::class, 'estacion_id');
-    }
+  public function estacion()
+  {
+    return $this->belongsTo(Estacion::class, 'estacion_id');
+  }
 }

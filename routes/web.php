@@ -48,7 +48,7 @@ use App\Http\Controllers\tables\Basic as TablesBasic;
 
 // Tus controladores
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Admin\UserController; 
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\HistoricalRecordController;
 use App\Http\Controllers\DataController;
 
@@ -131,8 +131,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/registro-historico', [HistoricalRecordController::class, 'index'])->name('registro-historico');
 
-    // Ruta para mostrar el formulario de carga y la tabla de datos
     Route::get('/datos', [DataController::class, 'index'])->name('datos.index');
-    // Ruta para procesar el archivo Excel subido
     Route::post('/datos', [DataController::class, 'store'])->name('datos.store');
+
+    Route::get('/datos/lotes', [DataController::class, 'lotes'])->name('datos.lotes');
+    Route::delete('/datos/lotes/{id}', [DataController::class, 'destroyLote'])->name('datos.lotes.destroy');
+
+    Route::post('/datos/preview/confirm', [DataController::class, 'confirmPreviewImport'])->name('datos.preview.confirm');
+    Route::post('/datos/preview/cancel',  [DataController::class, 'cancelPreviewImport'])->name('datos.preview.cancel');
 });
