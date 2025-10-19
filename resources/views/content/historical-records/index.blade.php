@@ -1,126 +1,128 @@
 @extends('layouts/contentNavbarLayout')
+@section('title','Registro histórico')
 
-@section('title', 'Registro Histórico - Cota')
-
-{{-- Carga los estilos de ApexCharts --}}
-@section('vendor-style')
-@vite('resources/assets/vendor/libs/apex-charts/apex-charts.scss')
-@endsection
-
-{{-- Carga la librería de ApexCharts --}}
 @section('vendor-script')
-@vite('resources/assets/vendor/libs/apex-charts/apexcharts.js')
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 @endsection
 
-{{-- Carga nuestro archivo JS y le pasa los datos --}}
 @section('page-script')
-<script>
-  if (typeof isDarkStyle === 'undefined') {
-    var isDarkStyle = false;
-  }
-  const kpis = {
-    !!json_encode($kpis) !!
-  };
-  const chartData = {
-    !!json_encode($chartData) !!
-  };
-</script>
-@vite('resources/assets/js/historical-records-charts.js')
+  <script>
+    // Inyectamos datos ANTES del bundle
+    window.series = {!! json_encode($series, JSON_UNESCAPED_UNICODE) !!};
+    window.kpis   = {!! json_encode($kpis,   JSON_UNESCAPED_UNICODE) !!};
+  </script>
+  @vite('resources/assets/js/historical-records-charts.js')
 @endsection
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="fw-bold">
-    <span class="text-muted fw-light">Estación {{ $stationName }} /</span> Registro Histórico
-  </h4>
-  {{-- Filtro de Fecha --}}
-  <form action="{{ route('registro-historico') }}" method="GET" class="d-flex align-items-center">
-    <label for="date" class="form-label me-2 mb-0">Fecha:</label>
-    <input type="date" id="date" name="date" class="form-control"
-      value="{{ \Carbon\Carbon::parse($targetDate)->format('Y-m-d') }}"
-      onchange="this.form.submit()">
+<div class="container-xxl py-3">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h4 class="mb-0">Registro histórico — {{ $estacionNombre }}</h4>
+  </div>
+
+  {{-- Filtros (sin select de estación) --}}
+  <form class="row g-2 mb-3" method="GET" action="{{ route('registro-historico') }}">
+    <div class="col-6 col-md-3">
+      <label class="form-label">Desde</label>
+      <input type="date" name="from" value="{{ $from }}" class="form-control">
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label">Hasta</label>
+      <input type="date" name="to" value="{{ $to }}" class="form-control">
+    </div>
+    <div class="col-12 col-md-2 d-flex align-items-end">
+      <button class="btn btn-primary w-100">Aplicar</button>
+    </div>
   </form>
-</div>
 
-<div class="row gy-4 mb-4">
-  <div class="col-sm-6 col-lg-3">
-    <div class="card card-border-shadow-primary h-100">
-      <div class="card-body">
-        <div class="d-flex align-items-center mb-2 pb-1">
-          <div class="avatar me-2"><span class="avatar-initial rounded bg-label-primary"><i class="ri-thermometer-line"></i></span></div>
-          <h4 class="ms-1 mb-0">{{ number_format($kpis['avg_temp'] ?? 0, 1) }} °C</h4>
-        </div>
-        <p class="mb-1">Temperatura Promedio</p>
+  {{-- INVENTARIO: Volumen (gl) --}}
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between">
+        <h6 class="mb-2">Inventario (Volumen, gl)</h6>
+        <small class="text-muted">{{ $kpis['inventario_ultimo_str'] ?? '—' }}</small>
       </div>
+      <div id="invChart"></div>
     </div>
   </div>
-  <div class="col-sm-6 col-lg-3">
-    <div class="card card-border-shadow-info h-100">
-      <div class="card-body">
-        <div class="d-flex align-items-center mb-2 pb-1">
-          <div class="avatar me-2"><span class="avatar-initial rounded bg-label-info"><i class="ri-water-percent-line"></i></span></div>
-          <h4 class="ms-1 mb-0">{{ number_format(($kpis['avg_humidity'] ?? 0) * 100, 1) }}%</h4>
-        </div>
-        <p class="mb-1">Humedad Promedio</p>
-      </div>
-    </div>
-  </div>
-  <div class="col-sm-6 col-lg-3">
-    <div class="card card-border-shadow-warning h-100">
-      <div class="card-body">
-        <div class="d-flex align-items-center mb-2 pb-1">
-          <div class="avatar me-2"><span class="avatar-initial rounded bg-label-warning"><i class="ri-gas-station-line"></i></span></div>
-          <h4 class="ms-1 mb-0">{{ number_format($kpis['daily_sales'] ?? 0, 2) }} gl</h4>
-        </div>
-        <p class="mb-1">Ventas Diarias</p>
-      </div>
-    </div>
-  </div>
-  <div class="col-sm-6 col-lg-3">
-    <div class="card card-border-shadow-danger h-100">
-      <div class="card-body">
-        <div class="d-flex align-items-center mb-2 pb-1">
-          <div class="avatar me-2"><span class="avatar-initial rounded bg-label-danger"><i class="ri-cloud-windy-line"></i></span></div>
-          <h4 class="ms-1 mb-0">{{ number_format($kpis['total_emissions'] ?? 0, 4) }} kg</h4>
-        </div>
-        <p class="mb-1">Emisiones Totales</p>
-      </div>
-    </div>
-  </div>
-</div>
 
-<div class="row gy-4 mb-4">
-  <div class="col-lg-8">
-    <div class="card">
-      <div class="card-header">
-        <h5 class="mb-0">Temperatura vs Humedad</h5>
+  {{-- PRESIÓN + PÉRDIDAS (COV) --}}
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="mb-2">Presión (Psi)</h6>
+          <div id="presionChart"></div>
+        </div>
       </div>
-      <div class="card-body">
-        <div id="tempHumidityChart"></div>
+    </div>
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="mb-2">Pérdidas totales de emisión de vapor (COV, kg/día)</h6>
+          <div id="perdidasChart"></div>
+        </div>
       </div>
     </div>
   </div>
-  <div class="col-lg-4">
-    <div class="card">
-      <div class="card-header">
-        <h5 class="mb-0">Emisiones vs Ventas</h5>
-      </div>
-      <div class="card-body">
-        <div id="emissionsSalesChart"></div>
-      </div>
-    </div>
-  </div>
-</div>
 
-<div class="row gy-4">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header">
-        <h5 class="mb-0">Presiones de Vapor (MmHg)</h5>
+  {{-- GRAFICA DIARIA (ventas/descargue - opcional) --}}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h6 class="mb-2">Gráfica diaria (Ventas / Descargue)</h6>
+      <div id="graficaDiariaChart"></div>
+    </div>
+  </div>
+
+  {{-- CÁLCULO COV / CO2 + GRÁFICA COV --}}
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="mb-2">Cálculo COV y CO₂</h6>
+          <ul class="mb-0">
+            <li><strong>COV total:</strong> {{ number_format($kpis['cov_total_kg'] ?? 0, 3) }} kg</li>
+            <li><strong>CO₂e total:</strong> {{ number_format($kpis['co2_total_kg'] ?? 0, 3) }} kg</li>
+            <li><strong>Factor (CO₂/COV):</strong>
+              @if(!empty($kpis['factor_cov_to_co2']))
+                {{ number_format($kpis['factor_cov_to_co2'], 4) }} kg/kg
+              @else — @endif
+            </li>
+          </ul>
+        </div>
       </div>
-      <div class="card-body">
-        <div id="pressuresChart"></div>
+    </div>
+    <div class="col-12 col-lg-8">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="mb-2">Gráfica COV (kg/día)</h6>
+          <div id="covChart"></div>
+        </div>
       </div>
+    </div>
+  </div>
+
+  {{-- VARIACIÓN (faltante/sobrante) --}}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h6 class="mb-2">Sumatoria valor faltante o sobrante diario (gl)</h6>
+      <div id="variacionChart"></div>
+    </div>
+  </div>
+
+  {{-- NOTIFICACIONES / PARÁMETROS (placeholder) --}}
+  <div class="card">
+    <div class="card-body">
+      <h6 class="mb-2">Notificaciones, parámetros legales y normativos</h6>
+      @if(empty($alerts))
+        <p class="text-muted mb-0">Sin alertas en el rango.</p>
+      @else
+        <ul class="mb-0">
+          @foreach($alerts as $a)
+            <li>{{ $a }}</li>
+          @endforeach
+        </ul>
+      @endif
     </div>
   </div>
 </div>

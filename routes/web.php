@@ -71,7 +71,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('usuarios', UserController::class);
     });
 
-
+    /*
     // layout
     Route::get('/layouts/without-menu', [WithoutMenu::class, 'index'])->name('layouts-without-menu');
     Route::get('/layouts/without-navbar', [WithoutNavbar::class, 'index'])->name('layouts-without-navbar');
@@ -128,7 +128,7 @@ Route::middleware(['auth'])->group(function () {
 
     // tables
     Route::get('/tables/basic', [TablesBasic::class, 'index'])->name('tables-basic');
-
+    */
     Route::get('/registro-historico', [HistoricalRecordController::class, 'index'])->name('registro-historico');
 
     Route::get('/datos', [DataController::class, 'index'])->name('datos.index');

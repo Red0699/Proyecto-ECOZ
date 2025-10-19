@@ -24,7 +24,6 @@
         <!-- /Logo -->
 
         <div class="card-body mt-1">
-          <h4 class="mb-1">Bienvenido a ECOZ</h4>
           <p class="mb-5">Accede a tu cuenta para empezar</p>
 
           <form id="formAuthentication" class="mb-5" method="POST" action="{{ route('login.post') }}">
@@ -48,7 +47,7 @@
               <div class="form-check mb-0">
                 <input class="form-check-input" type="checkbox" id="remember-me">
                 <label class="form-check-label" for="remember-me">
-                  Recuerdame me
+                  Recuérdame
                 </label>
               </div>
               <a href="{{url('auth/forgot-password-basic')}}" class="float-end mb-1">
