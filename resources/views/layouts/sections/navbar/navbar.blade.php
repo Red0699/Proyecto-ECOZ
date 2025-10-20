@@ -55,9 +55,22 @@ $navbarDetached = ($navbarDetached ?? '');
 
           <!-- User -->
           <li class="nav-item navbar-dropdown dropdown-user dropdown">
+            @php
+            $user = Auth::user();
+            $estacionNombre = strtoupper($user->estacion->nombre ?? '');
+            $avatarFile = match ($estacionNombre) {
+            'COTA' => 'EDS-COTA.jpg',
+            'SILVANIA' => 'EDS-SILVANIA.jpg',
+            'UBATÉ', 'UBATE' => 'EDS-UBATE.jpg',
+            default => '1.png', // fallback
+            };
+            @endphp
+
             <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
               <div class="avatar avatar-online">
-                <img src="{{ asset('assets/img/avatars/1.png') }}" alt class="w-px-40 h-auto rounded-circle">
+                <img src="{{ asset('assets/img/avatars/' . $avatarFile) }}"
+                  alt="{{ $user->name }}"
+                  class="w-px-60 h-60 rounded-circle">
               </div>
             </a>
             <ul class="dropdown-menu dropdown-menu-end mt-3 py-2">
@@ -66,12 +79,16 @@ $navbarDetached = ($navbarDetached ?? '');
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 me-2">
                       <div class="avatar avatar-online">
-                        <img src="{{ asset('assets/img/avatars/1.png') }}" alt class="w-px-40 h-auto rounded-circle">
+                        <img src="{{ asset('assets/img/avatars/' . $avatarFile) }}"
+                          alt="{{ $user->name }}"
+                          class="w-px-60 h-60 rounded-circle">
                       </div>
                     </div>
                     <div class="flex-grow-1">
-                      <h6 class="mb-0 small">John Doe</h6>
-                      <small class="text-muted">Admin</small>
+                      <h6 class="mb-0 small">{{ Auth::user()->name ?? 'Invitado' }}</h6>
+                      <small class="text-muted">
+                        {{ Auth::user()->role === 'Administrador' ? 'Administrador' : 'Usuario' }}
+                      </small>
                     </div>
                   </div>
                 </a>
