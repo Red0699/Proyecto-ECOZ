@@ -4,10 +4,10 @@
       "menuHeader": "Principal"
     },
     {
-      "url": "/",
-      "name": "Dashboard",
+      "url": "/inicio",
+      "name": "Inicio",
       "icon": "menu-icon tf-icons ri-home-smile-line",
-      "slug": "dashboard-analytics"
+      "slug": "inicio"
     },
     {
       "url": "/registro-historico",
@@ -26,6 +26,12 @@
       "name": "Normativa",
       "icon": "menu-icon tf-icons ri-scales-3-line",
       "slug": "normativa"
+    },
+    {
+      "url": "/estimaciones",
+      "name": "Estimaciones",
+      "icon": "menu-icon tf-icons ri-calculator-line",
+      "slug": "estimaciones"
     },
     {
       "menuHeader": "Administración"

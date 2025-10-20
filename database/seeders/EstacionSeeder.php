@@ -2,19 +2,24 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Estacion;
 
 class EstacionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        foreach (['Cota', 'Silvania', 'Ubaté'] as $nombre) {
-            Estacion::firstOrCreate(['nombre' => $nombre]);
+        $data = [
+            ['nombre' => 'Cota',     'capacidad_gl' => 12000],
+            ['nombre' => 'Silvania', 'capacidad_gl' => 9000],
+            ['nombre' => 'Ubaté',    'capacidad_gl' => 12000],
+        ];
+
+        foreach ($data as $item) {
+            Estacion::updateOrCreate(
+                ['nombre' => $item['nombre']],
+                ['capacidad_gl' => $item['capacidad_gl']]
+            );
         }
     }
 }

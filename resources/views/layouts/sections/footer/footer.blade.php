@@ -3,18 +3,22 @@ $containerFooter = !empty($containerNav) ? $containerNav : 'container-fluid';
 @endphp
 
 <!-- Footer -->
-<footer class="content-footer footer bg-footer-theme">
+<footer class="content-footer footer bg-footer-theme border-top">
   <div class="{{ $containerFooter }}">
-    <div class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
-      <div class="text-body">
-        © <script>document.write(new Date().getFullYear())</script>, made with <span class="text-danger"><i class="tf-icons ri-heart-fill"></i></span> by <a href="{{ (!empty(config('variables.creatorUrl')) ? config('variables.creatorUrl') : '') }}" target="_blank" class="footer-link">{{ (!empty(config('variables.creatorName')) ? config('variables.creatorName') : '') }}</a>
+    <div class="footer-container d-flex flex-column flex-md-row align-items-center justify-content-between py-3">
+
+      {{-- Texto principal --}}
+      <div class="text-center text-md-start text-body mb-2 mb-md-0">
+        <strong>ECO₂Z</strong> © {{ date('Y') }}
+        — Proyecto con <span class="text-success fw-semibold">todos los derechos reservados</span>.
       </div>
-      <div class="d-none d-lg-inline-block">
-        <a href="{{ config('variables.licenseUrl') ? config('variables.licenseUrl') : '#' }}" class="footer-link me-4" target="_blank">License</a>
-        <a href="{{ config('variables.moreThemes') ? config('variables.moreThemes') : '#' }}" target="_blank" class="footer-link me-4">More Themes</a>
-        <a href="{{ config('variables.documentation') ? config('variables.documentation').'/laravel-introduction.html' : '#' }}" target="_blank" class="footer-link me-4">Documentation</a>
-        <a href="{{ config('variables.support') ? config('variables.support') : '#' }}" target="_blank" class="footer-link d-none d-sm-inline-block">Support</a>
+
+      {{-- Línea secundaria opcional --}}
+      <div class="text-center text-md-end small text-muted">
+        Creado en {{ config('app.name') ?? 'Laravel' }} ·
+        <span class="fw-semibold">Desde {{ config('app.start_year', '2025') }}</span>
       </div>
+
     </div>
   </div>
 </footer>

@@ -51,6 +51,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\HistoricalRecordController;
 use App\Http\Controllers\DataController;
+use App\Http\Controllers\NormativaController;
 
 // Login (vista + acción POST)
 Route::get('/login', function () {
@@ -64,7 +65,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // --- GRUPO PARA USUARIOS AUTENTICADOS ---
 Route::middleware(['auth'])->group(function () {
 
-    Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
+    //Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
+
+    Route::get('/inicio', [\App\Http\Controllers\HomeController::class, 'index'])->name('inicio');
 
 
     Route::middleware(['auth', 'is.admin'])->group(function () {
@@ -139,4 +142,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/datos/preview/confirm', [DataController::class, 'confirmPreviewImport'])->name('datos.preview.confirm');
     Route::post('/datos/preview/cancel',  [DataController::class, 'cancelPreviewImport'])->name('datos.preview.cancel');
+    Route::get('/normativa', [NormativaController::class, 'index'])
+        ->name('normativas.index');
 });

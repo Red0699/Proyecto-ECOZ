@@ -12,11 +12,10 @@ class HistoricalRecordController extends Controller
 {
     public function index(Request $request)
     {
-        // 1) Estación desde el usuario autenticado (sin select).
+        // 1) Estación desde el usuario autenticado (sin select)
         $user = Auth::user();
         $estacionId = (int) ($user?->estacion_id ?? 0);
 
-        // Fallback: si el usuario no tiene estación, toma la primera con datos.
         if (!$estacionId) {
             $estacionId = (int) DatosHistoricos::select('estacion_id')
                 ->groupBy('estacion_id')
@@ -28,11 +27,11 @@ class HistoricalRecordController extends Controller
             ? (Estacion::where('id', $estacionId)->value('nombre') ?? '—')
             : '—';
 
-        // 2) Filtros de fecha (YYYY-MM-DD)
+        // 2) Filtros de fecha (para las gráficas "por rango" que mantienes)
         $from = $request->input('from');
         $to   = $request->input('to');
 
-        // Defaults si no llegan filtros o no hay datos
+        // Valores por defecto
         $series = [
             'labels'       => [],
             'inventario'   => [],
@@ -42,19 +41,29 @@ class HistoricalRecordController extends Controller
             'variacion_gl' => [],
             'ventas_gl'    => [],
             'descargue_gl' => [],
+
+            // NUEVO: series horarias del "último día del último archivo (lote)"
+            'day_labels'   => [],
+            'presion_dia'  => [],
+            'cov_dia'      => [],
+            'co2_dia'      => [],
+            'resp_dia'     => [],
+            'oper_dia'     => [],
         ];
+
         $kpis = [
-            'cov_total_kg'        => 0,
-            'co2_total_kg'        => 0,
-            'factor_cov_to_co2'   => null,
+            'cov_total_kg'          => 0,
+            'co2_total_kg'          => 0,
+            'factor_cov_to_co2'     => null,
             'inventario_ultimo_str' => '—',
         ];
+
         $alerts = [];
 
         if ($estacionId) {
             $base = DatosHistoricos::where('estacion_id', $estacionId);
 
-            // Si no viene rango, usar min/max disponibles de esa estación
+            // ====== Parte A: RANGO (agregado por día) – se mantiene ======
             if (!$from || !$to) {
                 $minFecha = (clone $base)->min('fecha');
                 $maxFecha = (clone $base)->max('fecha');
@@ -62,7 +71,6 @@ class HistoricalRecordController extends Controller
                 $to   = $to   ?: ($maxFecha ? Carbon::parse($maxFecha)->toDateString() : Carbon::today()->toDateString());
             }
 
-            // 3) Agregado por día en el rango
             $grouped = (clone $base)
                 ->whereBetween('fecha', [$from, $to])
                 ->selectRaw("
@@ -79,37 +87,57 @@ class HistoricalRecordController extends Controller
                 ->orderBy('fecha','asc')
                 ->get();
 
-            // 4) Labels SOLO fecha y series reindexadas a 0..n (->values()->all())
             $labels = $grouped->pluck('fecha')
                 ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
                 ->values()->all();
 
-            $series = [
-                'labels'       => $labels,
-                'inventario'   => $grouped->pluck('inventario')->map(fn($v)=> round((float)$v, 4))->values()->all(),
-                'psi_max'      => $grouped->pluck('psi_max')->map(fn($v)=> round((float)$v, 4))->values()->all(),
-                'cov_kg'       => $grouped->pluck('cov_kg')->map(fn($v)=> round((float)$v, 6))->values()->all(),
-                'co2_kg'       => $grouped->pluck('co2_kg')->map(fn($v)=> round((float)$v, 6))->values()->all(),
-                'variacion_gl' => $grouped->pluck('variacion_gl')->map(fn($v)=> round((float)$v, 4))->values()->all(),
-                'ventas_gl'    => $grouped->pluck('ventas_gl')->map(fn($v)=> round((float)$v, 4))->values()->all(),
-                'descargue_gl' => $grouped->pluck('descargue_gl')->map(fn($v)=> round((float)$v, 4))->values()->all(),
-            ];
+            $series['labels']       = $labels;
+            $series['inventario']   = $grouped->pluck('inventario')->map(fn($v)=>(float)$v)->values()->all();
+            $series['psi_max']      = $grouped->pluck('psi_max')->map(fn($v)=>(float)$v)->values()->all();
+            $series['cov_kg']       = $grouped->pluck('cov_kg')->map(fn($v)=>(float)$v)->values()->all();
+            $series['co2_kg']       = $grouped->pluck('co2_kg')->map(fn($v)=>(float)$v)->values()->all();
+            $series['variacion_gl'] = $grouped->pluck('variacion_gl')->map(fn($v)=>(float)$v)->values()->all();
+            $series['ventas_gl']    = $grouped->pluck('ventas_gl')->map(fn($v)=>(float)$v)->values()->all();
+            $series['descargue_gl'] = $grouped->pluck('descargue_gl')->map(fn($v)=>(float)$v)->values()->all();
 
-            // 5) KPIs del rango
             $sumCov = array_sum($series['cov_kg']);
             $sumCo2 = array_sum($series['co2_kg']);
             $kpis['cov_total_kg']      = $sumCov;
             $kpis['co2_total_kg']      = $sumCo2;
             $kpis['factor_cov_to_co2'] = $sumCov > 0 ? $sumCo2 / $sumCov : null;
 
-            // 6) Último inventario del rango (último registro real)
             $u = (clone $base)->whereBetween('fecha', [$from, $to])
                 ->orderBy('fecha','desc')->orderBy('hora','desc')->first();
             $kpis['inventario_ultimo_str'] = $u
                 ? number_format((float)$u->volumen_gl, 2).' gl ('.$u->fecha.')'
                 : '—';
+
+            // ====== Parte B: ÚLTIMO DÍA DEL ÚLTIMO ARCHIVO (lote) ======
+            $lastRow = (clone $base)->orderBy('created_at', 'desc')->first();
+            if ($lastRow) {
+                $lastLote  = $lastRow->lote_id;
+                // dentro de ese lote, el día más reciente
+                $lastFecha = (clone $base)->where('lote_id', $lastLote)->max('fecha');
+
+                $dayRows = (clone $base)
+                    ->where('lote_id', $lastLote)
+                    ->whereDate('fecha', $lastFecha)
+                    ->orderBy('hora','asc')
+                    ->get();
+
+                // etiquetas: hora (HH:mm) si existe; si no, índice
+                $dayLabels = $dayRows->map(function ($r, $idx) {
+                    return $r->hora ? substr((string)$r->hora, 0, 5) : ('P' . str_pad($idx + 1, 2, '0', STR_PAD_LEFT));
+                })->values();
+
+                $series['day_labels']  = $dayLabels->all();
+                $series['presion_dia'] = $dayRows->pluck('presion_psi')->map(fn($v)=>(float)$v)->values()->all();
+                $series['cov_dia']     = $dayRows->pluck('perdidas_totales_cov_kg')->map(fn($v)=>(float)$v)->values()->all();
+                $series['co2_dia']     = $dayRows->pluck('cov_a_co2_kg')->map(fn($v)=>(float)$v)->values()->all();
+                $series['resp_dia']    = $dayRows->pluck('perdidas_respiracion_kg')->map(fn($v)=>(float)$v)->values()->all();
+                $series['oper_dia']    = $dayRows->pluck('perdidas_operacion_kg')->map(fn($v)=>(float)$v)->values()->all();
+            }
         } else {
-            // Rango por defecto para el form si no hay estación
             $from = $from ?: Carbon::today()->toDateString();
             $to   = $to   ?: Carbon::today()->toDateString();
         }

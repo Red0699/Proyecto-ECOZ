@@ -5,98 +5,158 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const S = window.series || { labels: [] };
 
-  // === convierto labels a array (por si vienen como objeto) ===
+  // ====== 1) PALETA AMPLIA ======
+  // Puedes editar/añadir los que quieras
+  const PALETTE = [
+    '#1A73E8',
+    '#E91E63',
+    '#00C853',
+    '#FF9800',
+    '#8E24AA',
+    '#00BCD4',
+    '#9C27B0',
+    '#43A047',
+    '#F4511E',
+    '#3F51B5',
+    '#FDD835',
+    '#26A69A',
+    '#5C6BC0',
+    '#EC407A',
+    '#7CB342'
+  ];
+
+  // Devuelve N colores ciclando la paleta (para barras distribuidas)
+  const colorsFor = (n, start = 0) => Array.from({ length: n }, (_, i) => PALETTE[(i + start) % PALETTE.length]);
+
+  // ====== 2) Normalización de datos ======
   const labels = Array.isArray(S.labels)
     ? S.labels
-    : (S.labels && typeof S.labels === 'object' ? Object.values(S.labels) : []);
+    : S.labels && typeof S.labels === 'object'
+      ? Object.values(S.labels)
+      : [];
 
-  // === convierte cualquier array/objeto a números (null si no es convertible) ===
-  const toNum = (arr) => {
+  const toNum = arr => {
     if (!arr) return [];
-    const vals = Array.isArray(arr) ? arr : (typeof arr === 'object' ? Object.values(arr) : []);
+    const vals = Array.isArray(arr) ? arr : typeof arr === 'object' ? Object.values(arr) : [];
     return vals.map(v => (v === null || v === '' || isNaN(Number(v)) ? null : Number(v)));
   };
 
-  // === formato de ejes y tooltip ===
-  const yFmt = (v) => (Math.abs(v) < 1e-9 ? '0' : Number(v).toFixed(2));
-  const xCommon = { type: 'category', categories: labels, labels: { rotate: 0 } };
-  const yCommon = { labels: { formatter: yFmt } };
-  const tipCommon = {
-    y: { formatter: yFmt },
-    x: { formatter: (val, opts) => labels[opts.dataPointIndex] || '' }
-  };
+  // ====== 3) Opciones comunes ======
+  const yFmt = v => (Math.abs(v) < 1e-9 ? '0' : Number(v).toFixed(2));
   const noData = { text: 'Sin datos para el rango', align: 'center' };
 
-  // === INVENTARIO ===
+  const axesFor = cats => ({
+    xaxis: { type: 'category', categories: cats, labels: { rotate: 0 } },
+    yaxis: { labels: { formatter: yFmt } },
+    tooltip: {
+      theme: 'light',
+      x: { formatter: (_, opts) => cats?.[opts.dataPointIndex] ?? '' },
+      y: { formatter: yFmt }
+    },
+    grid: { strokeDashArray: 4 }
+  });
+
+  // ====== INVENTARIO (Pastel de volúmenes diarios) ======
   if (document.querySelector('#invChart')) {
+    const data = toNum(S.inventario);
+    const cats = labels;
+
     new ApexCharts(document.querySelector('#invChart'), {
-      chart: { type: 'line', height: 240, toolbar: { show: false } },
-      series: [{ name: 'Volumen (gl)', data: toNum(S.inventario) }],
-      xaxis: xCommon, yaxis: yCommon, tooltip: tipCommon, noData,
-      dataLabels: { enabled: false },
-      stroke: { width: 3, curve: 'smooth' },
-      grid: { strokeDashArray: 4 }
+      chart: { type: 'pie', height: 300, toolbar: { show: false } },
+      series: data,
+      labels: cats,
+      colors: colorsFor(data.length, 0), // paleta variada
+      legend: {
+        position: 'right',
+        offsetY: 20,
+        formatter: function (val, opts) {
+          const value = data[opts.seriesIndex];
+          return `${val}: ${value?.toFixed?.(2) ?? 0} gl`;
+        }
+      },
+      tooltip: {
+        y: { formatter: val => `${val.toFixed(2)} gl` }
+      },
+      noData: { text: 'Sin datos para el rango', align: 'center' },
+      dataLabels: {
+        enabled: true,
+        formatter: function (val, opts) {
+          return `${val.toFixed(1)}%`;
+        },
+        dropShadow: { enabled: false }
+      }
     }).render();
   }
-
-  // === PRESIÓN ===
+  // ====== 5) PRESIÓN (línea, otro color) ======
   if (document.querySelector('#presionChart')) {
     new ApexCharts(document.querySelector('#presionChart'), {
       chart: { type: 'line', height: 260, toolbar: { show: false } },
       series: [{ name: 'Psi (máx/día)', data: toNum(S.psi_max) }],
-      xaxis: xCommon, yaxis: yCommon, tooltip: tipCommon, noData,
-      dataLabels: { enabled: false },
+      colors: [PALETTE[2]],
       stroke: { width: 3, curve: 'smooth' },
-      grid: { strokeDashArray: 4 }
+      markers: { size: 3, colors: [PALETTE[2]], strokeColors: '#fff', strokeWidth: 2 },
+      ...axesFor(labels),
+      noData,
+      dataLabels: { enabled: false }
     }).render();
   }
 
-  // === COV (barras) ===
+  // ====== 6) PÉRDIDAS COV (barras distribuidas: cada barra con color) ======
   if (document.querySelector('#perdidasChart')) {
+    const data = toNum(S.cov_kg);
     new ApexCharts(document.querySelector('#perdidasChart'), {
       chart: { type: 'bar', height: 260, toolbar: { show: false } },
-      series: [{ name: 'COV (kg/día)', data: toNum(S.cov_kg) }],
-      xaxis: xCommon, yaxis: yCommon, tooltip: tipCommon, noData,
-      dataLabels: { enabled: false },
-      grid: { strokeDashArray: 4 }
+      series: [{ name: 'COV (kg/día)', data }],
+      colors: colorsFor(data.length, 3), // <- paleta variada por barra
+      plotOptions: { bar: { distributed: true, borderRadius: 4 } },
+      ...axesFor(labels),
+      noData,
+      dataLabels: { enabled: false }
     }).render();
   }
 
-  // === COV (línea) ===
+  // ====== 7) COV (línea, otro color) ======
   if (document.querySelector('#covChart')) {
     new ApexCharts(document.querySelector('#covChart'), {
       chart: { type: 'line', height: 300, toolbar: { show: false } },
       series: [{ name: 'COV (kg/día)', data: toNum(S.cov_kg) }],
-      xaxis: xCommon, yaxis: yCommon, tooltip: tipCommon, noData,
-      dataLabels: { enabled: false },
+      colors: [PALETTE[4]],
       stroke: { width: 3, curve: 'smooth' },
-      grid: { strokeDashArray: 4 }
+      markers: { size: 3, colors: [PALETTE[4]], strokeColors: '#fff', strokeWidth: 2 },
+      ...axesFor(labels),
+      noData,
+      dataLabels: { enabled: false }
     }).render();
   }
 
-  // === VARIACIÓN (gl) ===
+  // ====== 8) VARIACIÓN (barras distribuidas) ======
   if (document.querySelector('#variacionChart')) {
+    const data = toNum(S.variacion_gl);
     new ApexCharts(document.querySelector('#variacionChart'), {
       chart: { type: 'bar', height: 260, toolbar: { show: false } },
-      series: [{ name: 'Sumatoria variación (gl)', data: toNum(S.variacion_gl) }],
-      xaxis: xCommon, yaxis: yCommon, tooltip: tipCommon, noData,
-      dataLabels: { enabled: false },
-      grid: { strokeDashArray: 4 }
+      series: [{ name: 'Sumatoria variación (gl)', data }],
+      colors: colorsFor(data.length, 6), // <- paleta variada por barra
+      plotOptions: { bar: { distributed: true, borderRadius: 4 } },
+      ...axesFor(labels),
+      noData,
+      dataLabels: { enabled: false }
     }).render();
   }
 
-  // === Gráfica diaria (ventas / descargue) — opcional ===
+  // ====== 9) Ventas/Descargue (stacked, 2 colores distintos) ======
   if (document.querySelector('#graficaDiariaChart')) {
     new ApexCharts(document.querySelector('#graficaDiariaChart'), {
       chart: { type: 'bar', height: 300, stacked: true, toolbar: { show: false } },
       series: [
-        { name: 'Ventas (gl)',    data: toNum(S.ventas_gl) },
+        { name: 'Ventas (gl)', data: toNum(S.ventas_gl) },
         { name: 'Descargue (gl)', data: toNum(S.descargue_gl) }
       ],
-      xaxis: xCommon, yaxis: yCommon, tooltip: tipCommon, noData,
+      colors: [PALETTE[1], PALETTE[8]],
+      plotOptions: { bar: { borderRadius: 4 } },
+      ...axesFor(labels),
+      noData,
       dataLabels: { enabled: false },
-      legend: { position: 'top' },
-      grid: { strokeDashArray: 4 }
+      legend: { position: 'top' }
     }).render();
   }
 });
