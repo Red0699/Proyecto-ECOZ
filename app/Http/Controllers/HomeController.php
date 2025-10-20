@@ -42,13 +42,14 @@ class HomeController extends Controller
         // KPIs
         $kpis = [
             'last_day_str'              => '—',
-            'last_day_cov_kg'           => 0.0, // SUM COV (último día)
-            'last_day_co2_kg'           => 0.0, // SUM CO2 (último día)
-            'last_day_variacion_gl'     => 0.0, // SUM (sumatoria_variacion_gl) último día
-            'last_day_variacion_eds_gl' => 0.0, // SUM (variacion_eds_gl) último día
-            'last_lote'                 => null, // informativo
+            'last_day_cov_kg'           => 0.0, 
+            'last_day_co2_kg'           => 0.0, 
+            'last_day_variacion_gl'     => 0.0, 
+            'last_day_variacion_eds_gl' => 0.0,
+            'last_day_variacion_eds_gl'  => 0.0,
+            'last_lote'                 => null, 
             // Tanque
-            'inv_ult_gl'                => 0.0,  // volumen_gl del último registro del último día
+            'inv_ult_gl'                => 0.0,  
             'inv_capacity_gl'           => $capacidadTanque,
         ];
 
@@ -84,7 +85,8 @@ class HomeController extends Controller
                         AVG(perdidas_totales_cov_kg) AS cov_sum,
                         AVG(cov_a_co2_kg)            AS co2_sum,
                         AVG(sumatoria_variacion_gl)  AS variacion_gl,
-                        AVG(variacion_eds_gl)        AS variacion_eds_gl
+                        AVG(variacion_eds_gl)        AS variacion_eds_gl,
+                        AVG(perdidas_operacion_kg)   AS operacion_cov_sum
                     ")
                     ->first();
 
@@ -92,6 +94,7 @@ class HomeController extends Controller
                 $kpis['last_day_co2_kg']           = (float)($kAgg->co2_sum ?? 0);
                 $kpis['last_day_variacion_gl']     = (float)($kAgg->variacion_gl ?? 0);
                 $kpis['last_day_variacion_eds_gl'] = (float)($kAgg->variacion_eds_gl ?? 0);
+                $kpis['last_day_operacion_cov_kg']  = (float)($kAgg->operacion_cov_sum ?? 0);
 
                 // Último registro del día (para inventario)
                 $invUlt = (clone $base)
@@ -101,7 +104,7 @@ class HomeController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->first();
 
-                $kpis['inv_ult_gl'] = (float)($invUlt->volumen_gl ?? 0);
+                $kpis['inv_ult_gl'] = (int)($invUlt->volumen_gl ?? 0);
 
                 // === Regla Decreto 1717/2008 Art. 26 (usar inventario de la ÚLTIMA HORA) ===
                 $UMBRAL = 2700.0;
