@@ -12,43 +12,82 @@
 @endsection
 
 @section('page-script')
-  {{-- Inyecta los datos ANTES de cargar el JS de gráficos --}}
+  {{-- Inyecta los datos ANTES del JS --}}
   <script id="home-bootstrap">
     window.homeSeries = @json($series, JSON_UNESCAPED_UNICODE);
     window.homeKpis   = @json($kpis,   JSON_UNESCAPED_UNICODE);
-    window.homeAlerts = @json($alerts, JSON_UNESCAPED_UNICODE);
+    window.homeAlerts = @json($alerts, JSON_UNESCAPED_UNICODE); // puede traer objetos o strings
   </script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      if (Array.isArray(window.homeAlerts) && window.homeAlerts.length) {
-        // Mostramos hasta 3 toasts para no saturar
-        window.homeAlerts.slice(0, 3).forEach((msg, i) => {
-          const div = document.createElement('div');
-          div.className = 'toast align-items-center text-bg-danger'; // danger por norma crítica
-          div.setAttribute('role', 'alert');
-          div.setAttribute('aria-live', 'assertive');
-          div.setAttribute('aria-atomic', 'true');
-          div.style = `position: fixed; top: ${16 + i*76}px; right: 16px; z-index: 1080;`;
-
-          div.innerHTML = `
-            <div class="d-flex">
-              <div class="toast-body">
-                <strong>Alerta normativa:</strong> ${msg}
-              </div>
-              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-          `;
-          document.body.appendChild(div);
-          const t = new bootstrap.Toast(div, { delay: 6000 });
-          t.show();
-        });
+    // -------- Helpers ----------
+    function normalizeAlert(a) {
+      // Acepta string u objeto {severity, norma, mensaje}
+      if (a && typeof a === 'object') {
+        return {
+          severity: a.severity || 'warning',
+          norma:    a.norma    || 'Alerta',
+          mensaje:  a.mensaje  || ''
+        };
       }
+      return { severity: 'warning', norma: 'Alerta', mensaje: String(a ?? '') };
+    }
+
+    function pickOneAlert(alerts) {
+      // Muestra 1 sola: prioriza danger > warning > info
+      const arr = alerts.map(normalizeAlert);
+      return (
+        arr.find(x => x.severity === 'danger')  ||
+        arr.find(x => x.severity === 'warning') ||
+        arr.find(x => x.severity === 'info')    ||
+        null
+      );
+    }
+
+    function toastHtml(alert) {
+      const sev = alert.severity;
+      const color = (sev === 'danger' ? 'danger' : sev === 'warning' ? 'warning' : 'info');
+      const title = alert.norma || 'Alerta';
+      const msg = alert.mensaje || '';
+      return `
+        <div class="toast align-items-center text-bg-${color}" role="alert" aria-live="assertive" aria-atomic="true"
+             style="position: fixed; top: 16px; right: 16px; z-index: 1080;">
+          <div class="d-flex">
+            <div class="toast-body">
+              <strong>${title}:</strong> ${msg}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+          </div>
+        </div>`;
+    }
+
+    function showOneToastPerDay(alert) {
+      const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+      // Clave por norma + día (evita repetir el mismo aviso en el día)
+      const key = `ecoz:toast:${(alert.norma || 'alert').toLowerCase()}:${today}`;
+
+      if (!localStorage.getItem(key)) {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = toastHtml(alert);
+        const el = wrapper.firstElementChild;
+        document.body.appendChild(el);
+        const t = new bootstrap.Toast(el, { delay: 6000 });
+        t.show();
+        localStorage.setItem(key, '1');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const alerts = Array.isArray(window.homeAlerts) ? window.homeAlerts : [];
+      const one = pickOneAlert(alerts);
+      if (one) showOneToastPerDay(one);
+      
     });
   </script>
 
   @vite('resources/assets/js/home-charts.js')
 @endsection
+
 
 
 @section('content')

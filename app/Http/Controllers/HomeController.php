@@ -148,6 +148,33 @@ class HomeController extends Controller
             if ($lastRow) $kpis['last_lote'] = $lastRow->lote_id;
         }
 
+        // === ISO 14001 - 4.4 SGA (recordatorio DIARIO y fijo en Inicio) ===
+        $isoTitle   = 'ISO 14001 — 4.4 SGA';
+        $isoMessage = 'Recuerda verificar que los procesos operativos cumplan los requisitos normativos según la norma ISO 14001.';
+
+        // 2.a) Mostrar SIEMPRE en la card de notificaciones (fijo)
+        $alerts[] = [
+            'severity' => 'info',
+            'norma'    => $isoTitle,
+            'mensaje'  => $isoMessage,
+        ];
+
+        // 2.b) Enviar UNA vez por día (por usuario/estación)
+        if ($user && $user->email && $estacionId) {
+            $today = now()->toDateString(); // YYYY-MM-DD
+            $cacheKeyIso = "iso14001:daily:estacion:{$estacionId}:user:{$user->id}:{$today}";
+            if (!\Illuminate\Support\Facades\Cache::get($cacheKeyIso, false)) {
+                \Illuminate\Support\Facades\Notification::send(
+                    $user,
+                    new \App\Notifications\Iso14001DailyReminder(
+                        estacionNombre: $estacionNombre,
+                        fechaStr: $today
+                    )
+                );
+                \Illuminate\Support\Facades\Cache::put($cacheKeyIso, true, now()->addHours(24));
+            }
+        }
+
         return view('content.home.index', compact('estacionNombre', 'series', 'kpis', 'alerts'));
     }
 }
