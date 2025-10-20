@@ -1,0 +1,163 @@
+// ========== Página de Inicio — Card de Notificaciones ==========
+
+.notify-card {
+  border: 1px solid rgba(0,0,0,.06);
+  border-radius: 1rem;
+  overflow: hidden;
+
+  .card-header {
+    background: linear-gradient(90deg, rgba(0,0,0,.02), transparent);
+    border-bottom: 1px solid rgba(0,0,0,.06);
+  }
+}
+
+.notify-icon-title {
+  opacity: .75;
+}
+
+.notify-badge-count {
+  --_bg: rgba(99,102,241,.12); // índigo suave
+  --_fg: #4f46e5;              // índigo 600 aprox
+  background: var(--_bg);
+  color: var(--_fg);
+  border: 1px solid rgba(79,70,229,.2);
+  padding: .35rem .5rem;
+  border-radius: .65rem;
+  font-weight: 600;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.notify-empty {
+  padding: 1.25rem 0;
+  text-align: center;
+
+  &__icon {
+    font-size: 1.75rem;
+    line-height: 1;
+    margin-bottom: .25rem;
+  }
+  &__title {
+    font-weight: 600;
+  }
+  &__text {
+    font-size: .9rem;
+  }
+}
+
+.notify-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: .5rem;
+}
+
+.notify-item {
+  --_bg: #f8fafc;             // base neutro
+  --_bd: rgba(0,0,0,.06);     // borde
+  --_grad: linear-gradient(90deg, rgba(0,0,0,.04), transparent 60%);
+  --_accent: #64748b;         // slate 500
+  --_chip-bg: rgba(0,0,0,.06);
+  --_chip-fg: #334155;
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: .75rem;
+  align-items: start;
+  padding: .7rem .85rem;
+  border: 1px solid var(--_bd);
+  border-radius: .8rem;
+  background:
+    var(--_grad),
+    var(--_bg);
+  position: relative;
+  animation: notifyEnter .25s ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 4px;
+    border-radius: .8rem 0 0 .8rem;
+    background: var(--_accent);
+    opacity: .9;
+  }
+
+  &__icon {
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    border-radius: .55rem;
+    color: #fff;
+    background: var(--_accent);
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  }
+
+  &__content {
+    min-width: 0;
+  }
+
+  &__title {
+    font-weight: 600;
+    font-size: .92rem;
+    margin-bottom: .1rem;
+  }
+
+  &__text {
+    font-size: .88rem;
+    color: #475569;
+    line-height: 1.35;
+  }
+
+  &__tag .chip {
+    display: inline-block;
+    font-size: .75rem;
+    padding: .25rem .5rem;
+    border-radius: .5rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  // Estados
+  &--danger {
+    --_accent: #ef4444; // rojo 500
+    --_bg: #fff5f5;
+    --_bd: rgba(239,68,68,.18);
+
+    .chip-danger {
+      background: rgba(239,68,68,.12);
+      color: #b91c1c;
+      border-color: rgba(239,68,68,.2);
+    }
+  }
+
+  &--warning {
+    --_accent: #f59e0b; // ámbar 500
+    --_bg: #fffbeb;
+    --_bd: rgba(245,158,11,.22);
+
+    .chip-warning {
+      background: rgba(245,158,11,.12);
+      color: #b45309;
+      border-color: rgba(245,158,11,.2);
+    }
+  }
+
+  &--info {
+    --_accent: #3b82f6; // azul 500
+    --_bg: #eff6ff;
+    --_bd: rgba(59,130,246,.18);
+
+    .chip-info {
+      background: rgba(59,130,246,.12);
+      color: #1d4ed8;
+      border-color: rgba(59,130,246,.2);
+    }
+  }
+}
+
+@keyframes notifyEnter {
+  from { transform: translateY(4px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}

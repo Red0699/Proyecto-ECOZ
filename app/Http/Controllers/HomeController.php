@@ -102,6 +102,45 @@ class HomeController extends Controller
                     ->first();
 
                 $kpis['inv_ult_gl'] = (float)($invUlt->volumen_gl ?? 0);
+
+                // === Regla Decreto 1717/2008 Art. 26 (usar inventario de la ÚLTIMA HORA) ===
+                $UMBRAL = 2700.0;
+
+                // Reutiliza $invUlt obtenido arriba
+                $invUltRow = $invUlt;
+                $invUltGl   = (float)($invUltRow->volumen_gl ?? 0);
+                $lastHora   = $invUltRow?->hora ? Carbon::parse($invUltRow->hora)->format('H:i') : '—';
+                $lastFechaS = $kpis['last_day_str']; // YYYY-MM-DD (ya calculado arriba)
+
+                // actualiza el KPI que ya muestras en la tarjeta
+                $kpis['inv_ult_gl'] = $invUltGl;
+
+                if ($invUltGl > 0 && $invUltGl < $UMBRAL) {
+                    // Mensaje para la card de notificaciones
+                    $alerts[] = sprintf(
+                        'Decreto 1717/2008 (Art. 26): Inventario bajo en %s %s — %.2f gl (< %d gl). Acción: abastecer e informar.',
+                        $lastFechaS,
+                        $lastHora,
+                        $invUltGl,
+                        (int)$UMBRAL
+                    );
+
+                    // Enviar correo (evitar duplicados por día y estación)
+                    if ($user && $user->email) {
+                        $cacheKey = "invbajo1717:lasthour:estacion:{$estacionId}:fecha:{$lastFechaS}";
+                        $alreadySent = \Illuminate\Support\Facades\Cache::get($cacheKey, false);
+
+                        if (!$alreadySent) {
+                            \Illuminate\Support\Facades\Notification::send($user, new \App\Notifications\InventarioBajoDecreto1717(
+                                estacionNombre: $estacionNombre,
+                                fechaStr: "{$lastFechaS} {$lastHora}",
+                                inventarioDiarioGl: $invUltGl,
+                                umbralGl: $UMBRAL
+                            ));
+                            \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addHours(24));
+                        }
+                    }
+                }
             }
 
             // (Opcional) último lote para display

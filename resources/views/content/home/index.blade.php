@@ -5,15 +5,51 @@
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 @endsection
 
+@section('page-style')
+@vite([
+'resources/assets/vendor/scss/pages/page-home.scss'
+])
+@endsection
+
 @section('page-script')
   {{-- Inyecta los datos ANTES de cargar el JS de gráficos --}}
   <script id="home-bootstrap">
     window.homeSeries = @json($series, JSON_UNESCAPED_UNICODE);
     window.homeKpis   = @json($kpis,   JSON_UNESCAPED_UNICODE);
+    window.homeAlerts = @json($alerts, JSON_UNESCAPED_UNICODE);
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (Array.isArray(window.homeAlerts) && window.homeAlerts.length) {
+        // Mostramos hasta 3 toasts para no saturar
+        window.homeAlerts.slice(0, 3).forEach((msg, i) => {
+          const div = document.createElement('div');
+          div.className = 'toast align-items-center text-bg-danger'; // danger por norma crítica
+          div.setAttribute('role', 'alert');
+          div.setAttribute('aria-live', 'assertive');
+          div.setAttribute('aria-atomic', 'true');
+          div.style = `position: fixed; top: ${16 + i*76}px; right: 16px; z-index: 1080;`;
+
+          div.innerHTML = `
+            <div class="d-flex">
+              <div class="toast-body">
+                <strong>Alerta normativa:</strong> ${msg}
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+          `;
+          document.body.appendChild(div);
+          const t = new bootstrap.Toast(div, { delay: 6000 });
+          t.show();
+        });
+      }
+    });
   </script>
 
   @vite('resources/assets/js/home-charts.js')
 @endsection
+
 
 @section('content')
 <div class="container-xxl py-2">
@@ -144,14 +180,71 @@
   {{-- F3: Notificaciones --}}
   <div class="row g-2">
     <div class="col-12">
-      <div class="card h-100">
-        <div class="card-body">
-          <h6 class="mb-2">Notificaciones, parámetros legales y normativos</h6>
-          @if(empty($alerts)) <p class="text-muted mb-0">Sin alertas.</p>
-          @else <ul class="mb-0">@foreach($alerts as $a)<li>{{ $a }}</li>@endforeach</ul>@endif
+      <div class="card notify-card h-100 shadow-sm">
+        <div class="card-header d-flex align-items-center justify-content-between py-2">
+          <div class="d-flex align-items-center gap-2">
+            {{-- Ícono inline (no dependencias) --}}
+            <svg class="notify-icon-title" width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2Zm6-6v-5a6 6 0 0 0-12 0v5l-2 2v1h16v-1l-2-2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <h6 class="mb-0 fw-semibold">Notificaciones, parámetros legales y normativos</h6>
+          </div>
+
+          <span class="badge notify-badge-count">
+            {{ empty($alerts) ? '0' : count($alerts) }}
+          </span>
+        </div>
+
+        <div class="card-body py-2">
+          @if(empty($alerts))
+            <div class="notify-empty">
+              <div class="notify-empty__icon">😊</div>
+              <div class="notify-empty__title">Sin alertas</div>
+              <div class="notify-empty__text text-muted">Todo en orden por ahora.</div>
+            </div>
+          @else
+            <ul class="notify-list">
+              @foreach($alerts as $a)
+                @php
+                  // Soporta strings o arrays estructurados {severity, norma, mensaje}
+                  $isObj   = is_array($a);
+                  $sev     = $isObj ? ($a['severity'] ?? 'warning') : 'warning';
+                  $title   = $isObj ? ($a['norma'] ?? 'Alerta normativa') : 'Alerta normativa';
+                  $message = $isObj ? ($a['mensaje'] ?? (string)$a) : (string)$a;
+                @endphp
+                <li class="notify-item notify-item--{{ $sev }}">
+                  <div class="notify-item__icon">
+                    @if($sev === 'danger')
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
+                    @elseif($sev === 'warning')
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 8v5m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 0 0-3.46 0L3.2 16c-.77 1.33.19 3 1.73 3Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
+                    @else
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M13 16h-1V8h-1m2 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
+                    @endif
+                  </div>
+                  <div class="notify-item__content">
+                    <div class="notify-item__title">{{ $title }}</div>
+                    <div class="notify-item__text">{{ $message }}</div>
+                  </div>
+                  <div class="notify-item__tag">
+                    <span class="chip chip-{{ $sev }}">
+                      {{ $sev === 'danger' ? 'Crítica' : ($sev === 'warning' ? 'Atención' : 'Info') }}
+                    </span>
+                  </div>
+                </li>
+              @endforeach
+            </ul>
+          @endif
         </div>
       </div>
     </div>
   </div>
+
 </div>
 @endsection
