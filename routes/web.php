@@ -52,6 +52,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\HistoricalRecordController;
 use App\Http\Controllers\DataController;
 use App\Http\Controllers\NormativaController;
+use App\Http\Controllers\EstimacionesController;
 
 // Login 
 Route::get('/login', function () {
@@ -84,4 +85,5 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/datos/preview/cancel',  [DataController::class, 'cancelPreviewImport'])->name('datos.preview.cancel');
     Route::get('/normativa', [NormativaController::class, 'index'])
         ->name('normativas.index');
+    Route::get('/estimaciones', [EstimacionesController::class, 'index'])->name('estimaciones.static');
 });
