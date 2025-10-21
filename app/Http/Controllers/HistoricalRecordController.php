@@ -52,7 +52,6 @@ class HistoricalRecordController extends Controller
         $noDataMsg = null;
 
         if (!$estacionId) {
-            // Nada más que hacer
             return view('content.historical-records.index', compact(
                 'estacionNombre',
                 'mode',
@@ -67,36 +66,33 @@ class HistoricalRecordController extends Controller
         }
 
         // Fechas disponibles para esta estación
-        $minFecha = DatosHistoricos::where('estacion_id', $estacionId)->min('fecha');
-        $maxFecha = DatosHistoricos::where('estacion_id', $estacionId)->max('fecha');
-        $lastFecha = $maxFecha ? Carbon::parse($maxFecha) : null;
+        $minFecha  = DatosHistoricos::where('estacion_id', $estacionId)->min('fecha');
+        $maxFecha  = DatosHistoricos::where('estacion_id', $estacionId)->max('fecha');
+        $lastFecha = $maxFecha ? \Illuminate\Support\Carbon::parse($maxFecha) : null;
+
+        // <<< AJUSTE: mes/año por defecto = último dato (afecta al SELECT aunque esté deshabilitado)
+        if (!$request->has('month')) {
+            $month = (int) ($lastFecha ? (int)$lastFecha->format('m') : (int)now()->format('m'));
+        }
+        if (!$request->has('year')) {
+            $year  = (int) ($lastFecha ? (int)$lastFecha->format('Y') : (int)now()->format('Y'));
+        }
+        // >>> FIN AJUSTE
 
         // ===== Normalización de rango por modo (con “snap” a último periodo con datos) =====
         if ($mode === 'month') {
-            // Si no hay lastFecha, no habrá datos
-            if ($lastFecha) {
-                // Si el usuario no cambió nada, por defecto el MES del último dato
-                if (!$request->has('month') && !$request->has('year')) {
-                    $month = (int) $lastFecha->format('m');
-                    $year  = (int) $lastFecha->format('Y');
-                }
-            }
-            $start = Carbon::createFromDate($year, $month, 1)->startOfDay();
+            $start = \Illuminate\Support\Carbon::createFromDate($year, $month, 1)->startOfDay();
             $end   = $start->copy()->endOfMonth();
         } elseif ($mode === 'year') {
-            if ($lastFecha && !$request->has('year')) {
-                $year = (int) $lastFecha->format('Y');
-            }
-            $start = Carbon::createFromDate($year, 1, 1)->startOfDay();
+            $start = \Illuminate\Support\Carbon::createFromDate($year, 1, 1)->startOfDay();
             $end   = $start->copy()->endOfYear();
         } else { // custom
             if (!$from || !$to) {
-                // Si no hay rango, usar min/max disponibles (si existen)
-                $start = $minFecha ? Carbon::parse($minFecha)->startOfDay() : now()->copy()->startOfMonth();
-                $end   = $maxFecha ? Carbon::parse($maxFecha)->endOfDay()   : now()->copy()->endOfMonth();
+                $start = $minFecha ? \Illuminate\Support\Carbon::parse($minFecha)->startOfDay() : now()->copy()->startOfMonth();
+                $end   = $maxFecha ? \Illuminate\Support\Carbon::parse($maxFecha)->endOfDay()   : now()->copy()->endOfMonth();
             } else {
-                $start = Carbon::parse($from)->startOfDay();
-                $end   = Carbon::parse($to)->endOfDay();
+                $start = \Illuminate\Support\Carbon::parse($from)->startOfDay();
+                $end   = \Illuminate\Support\Carbon::parse($to)->endOfDay();
             }
         }
 
@@ -108,38 +104,28 @@ class HistoricalRecordController extends Controller
         $base = DatosHistoricos::where('estacion_id', $estacionId)
             ->whereBetween('fecha', [$from, $to]);
 
-        // ¿Hay filas en el rango actual?
         $hayDatosEnRango = $base->exists();
 
-        // Si el usuario no ha tocado filtros y no hay datos, “snap” al último mes con datos (o año con datos)
         if (!$hayDatosEnRango) {
             if ($lastFecha) {
                 if ($mode === 'month' && !$request->has('month') && !$request->has('year')) {
-                    $month = (int) $lastFecha->format('m');
-                    $year  = (int) $lastFecha->format('Y');
-                    $start = Carbon::createFromDate($year, $month, 1)->startOfDay();
+                    $month = (int)$lastFecha->format('m');
+                    $year  = (int)$lastFecha->format('Y');
+                    $start = \Illuminate\Support\Carbon::createFromDate($year, $month, 1)->startOfDay();
                     $end   = $start->copy()->endOfMonth();
-                    $from = $start->toDateString();
-                    $to = $end->toDateString();
-                    $base = DatosHistoricos::where('estacion_id', $estacionId)->whereBetween('fecha', [$from, $to]);
-                    $hayDatosEnRango = $base->exists();
                 } elseif ($mode === 'year' && !$request->has('year')) {
-                    $year = (int) $lastFecha->format('Y');
-                    $start = Carbon::createFromDate($year, 1, 1)->startOfDay();
+                    $year  = (int)$lastFecha->format('Y');
+                    $start = \Illuminate\Support\Carbon::createFromDate($year, 1, 1)->startOfDay();
                     $end   = $start->copy()->endOfYear();
-                    $from = $start->toDateString();
-                    $to = $end->toDateString();
-                    $base = DatosHistoricos::where('estacion_id', $estacionId)->whereBetween('fecha', [$from, $to]);
-                    $hayDatosEnRango = $base->exists();
-                } elseif ($mode === 'custom' && !$request->has('from') && !$request->has('to')) {
-                    // ya “snappeamos” arriba a min/max
-                    $hayDatosEnRango = $base->exists();
                 }
+                $from = $start->toDateString();
+                $to   = $end->toDateString();
+                $base = DatosHistoricos::where('estacion_id', $estacionId)->whereBetween('fecha', [$from, $to]);
+                $hayDatosEnRango = $base->exists();
             }
         }
 
         if (!$hayDatosEnRango) {
-            // No hay datos para el periodo definitivo → devolvemos la vista con aviso
             $noDataMsg = 'No se encontraron registros para el periodo seleccionado.';
             return view('content.historical-records.index', compact(
                 'estacionNombre',
@@ -154,27 +140,27 @@ class HistoricalRecordController extends Controller
             ));
         }
 
-        // ===== Agregación según modo =====
+        // ===== Agregación según modo (igual que ya tenías) =====
         if ($mode === 'year') {
             $grouped = $base->selectRaw("
-                DATE_FORMAT(fecha, '%Y-%m') as periodo,
-                AVG(volumen_gl)              AS inventario,
-                MAX(presion_psi)             AS psi_max,
-                SUM(perdidas_totales_cov_kg) AS cov_kg,
-                SUM(cov_a_co2_kg)            AS co2_kg
-            ")
+            DATE_FORMAT(fecha, '%Y-%m') as periodo,
+            AVG(volumen_gl)              AS inventario,
+            MAX(presion_psi)             AS psi_max,
+            SUM(perdidas_totales_cov_kg) AS cov_kg,
+            SUM(cov_a_co2_kg)            AS co2_kg
+        ")
                 ->groupBy('periodo')->orderBy('periodo', 'asc')->get();
             $labels = $grouped->pluck('periodo')->all();
         } else {
             $grouped = $base->selectRaw("
-                fecha as periodo,
-                AVG(volumen_gl)              AS inventario,
-                MAX(presion_psi)             AS psi_max,
-                SUM(perdidas_totales_cov_kg) AS cov_kg,
-                SUM(cov_a_co2_kg)            AS co2_kg
-            ")
+            fecha as periodo,
+            AVG(volumen_gl)              AS inventario,
+            MAX(presion_psi)             AS psi_max,
+            SUM(perdidas_totales_cov_kg) AS cov_kg,
+            SUM(cov_a_co2_kg)            AS co2_kg
+        ")
                 ->groupBy('periodo')->orderBy('periodo', 'asc')->get();
-            $labels = $grouped->pluck('periodo')->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))->all();
+            $labels = $grouped->pluck('periodo')->map(fn($d) => \Illuminate\Support\Carbon::parse($d)->format('Y-m-d'))->all();
         }
 
         $series['labels']     = $labels;
@@ -197,8 +183,6 @@ class HistoricalRecordController extends Controller
             ? number_format((float)$u->volumen_gl, 2) . ' gl (' . $u->fecha . ')'
             : '—';
 
-
-
         return view('content.historical-records.index', compact(
             'estacionNombre',
             'mode',
@@ -211,6 +195,7 @@ class HistoricalRecordController extends Controller
             'noDataMsg'
         ));
     }
+
 
 
     public function pdf(Request $request)
@@ -351,7 +336,7 @@ class HistoricalRecordController extends Controller
                 : '—';
         }
 
-        $logoPath = public_path('assets/img/logo/LOGO_ECO.png'); 
+        $logoPath = public_path('assets/img/logo/LOGO_ECO.png');
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
             'content.historical-records.pdf',
             compact(
