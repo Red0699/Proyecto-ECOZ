@@ -93,7 +93,7 @@
     <div class="col-12 col-md-4">
       <div class="hrx-kpi card">
         <div class="card-body">
-          <div class="hrx-kpi-label">CO₂e total</div>
+          <div class="hrx-kpi-label">CO₂ total</div>
           <div class="hrx-kpi-value">{{ number_format($kpis['co2_total_kg'] ?? 0, 3) }} <span>kg</span></div>
         </div>
       </div>

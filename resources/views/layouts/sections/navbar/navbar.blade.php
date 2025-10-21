@@ -47,11 +47,13 @@ $navbarDetached = ($navbarDetached ?? '');
         <!-- /Search -->
         <ul class="navbar-nav flex-row align-items-center ms-auto">
 
-          <!--   
-          <li class="nav-item lh-1 me-4">
-            <a class="github-button" href="{{config('variables.repository')}}" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star themeselection/materio-html-laravel-admin-template-free on GitHub">Star</a>
+          <!-- Notificaciones (visual) -->
+          <li class="nav-item me-3 px-4">
+            <a class="nav-link position-relative p-0" href="javascript:void(0);" aria-label="Notificaciones">
+              <i class="ri-notification-line ri-28px"></i>
+              
+            </a>
           </li>
-          -->
 
           <!-- User -->
           <li class="nav-item navbar-dropdown dropdown-user dropdown">

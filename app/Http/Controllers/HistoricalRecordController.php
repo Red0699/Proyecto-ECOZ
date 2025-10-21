@@ -146,8 +146,8 @@ class HistoricalRecordController extends Controller
             DATE_FORMAT(fecha, '%Y-%m') as periodo,
             AVG(volumen_gl)              AS inventario,
             MAX(presion_psi)             AS psi_max,
-            SUM(perdidas_totales_cov_kg) AS cov_kg,
-            SUM(cov_a_co2_kg)            AS co2_kg
+            AVG(perdidas_totales_cov_kg) AS cov_kg,
+            AVG(cov_a_co2_kg)            AS co2_kg
         ")
                 ->groupBy('periodo')->orderBy('periodo', 'asc')->get();
             $labels = $grouped->pluck('periodo')->all();
@@ -156,8 +156,8 @@ class HistoricalRecordController extends Controller
             fecha as periodo,
             AVG(volumen_gl)              AS inventario,
             MAX(presion_psi)             AS psi_max,
-            SUM(perdidas_totales_cov_kg) AS cov_kg,
-            SUM(cov_a_co2_kg)            AS co2_kg
+            AVG(perdidas_totales_cov_kg) AS cov_kg,
+            AVG(cov_a_co2_kg)            AS co2_kg
         ")
                 ->groupBy('periodo')->orderBy('periodo', 'asc')->get();
             $labels = $grouped->pluck('periodo')->map(fn($d) => \Illuminate\Support\Carbon::parse($d)->format('Y-m-d'))->all();
@@ -299,8 +299,8 @@ class HistoricalRecordController extends Controller
                     DATE_FORMAT(fecha, '%Y-%m') AS periodo,
                     AVG(volumen_gl)              AS inventario,
                     MAX(presion_psi)             AS psi_max,
-                    SUM(perdidas_totales_cov_kg) AS cov_kg,
-                    SUM(cov_a_co2_kg)            AS co2_kg
+                    AVG(perdidas_totales_cov_kg) AS cov_kg,
+                    AVG(cov_a_co2_kg)            AS co2_kg
                 ")->groupBy('periodo')->orderBy('periodo')->get();
                 $labels = $grouped->pluck('periodo')->all();
             } else {
@@ -308,8 +308,8 @@ class HistoricalRecordController extends Controller
                     fecha AS periodo,
                     AVG(volumen_gl)              AS inventario,
                     MAX(presion_psi)             AS psi_max,
-                    SUM(perdidas_totales_cov_kg) AS cov_kg,
-                    SUM(cov_a_co2_kg)            AS co2_kg
+                    AVG(perdidas_totales_cov_kg) AS cov_kg,
+                    AVG(cov_a_co2_kg)            AS co2_kg
                 ")->groupBy('periodo')->orderBy('periodo')->get();
                 $labels = $grouped->pluck('periodo')->map(fn($d) => \Illuminate\Support\Carbon::parse($d)->format('Y-m-d'))->all();
             }

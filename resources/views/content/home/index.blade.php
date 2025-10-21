@@ -103,6 +103,75 @@
     <small class="text-muted">Último día: {{ $kpis['last_day_str'] ?? '—' }} @if(!empty($kpis['last_lote'])) · Lote {{ $kpis['last_lote'] }} @endif</small>
   </div>
 
+  {{-- F3: Notificaciones --}}
+  <div class="row g-2 mb-2">
+    <div class="col-12">
+      <div class="card notify-card h-100 shadow-sm">
+        <div class="card-header d-flex align-items-center justify-content-between py-2">
+          <div class="d-flex align-items-center gap-2">
+            {{-- Ícono inline (no dependencias) --}}
+            <svg class="notify-icon-title" width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2Zm6-6v-5a6 6 0 0 0-12 0v5l-2 2v1h16v-1l-2-2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+            <h6 class="mb-0 fw-semibold">Notificaciones, parámetros legales y normativos</h6>
+          </div>
+
+          <span class="badge notify-badge-count">
+            {{ empty($alerts) ? '0' : count($alerts) }}
+          </span>
+        </div>
+
+        <div class="card-body py-2">
+          @if(empty($alerts))
+          <div class="notify-empty">
+            <div class="notify-empty__icon">😊</div>
+            <div class="notify-empty__title">Sin alertas</div>
+            <div class="notify-empty__text text-muted">Todo en orden por ahora.</div>
+          </div>
+          @else
+          <ul class="notify-list">
+            @foreach($alerts as $a)
+            @php
+            // Soporta strings o arrays estructurados {severity, norma, mensaje}
+            $isObj = is_array($a);
+            $sev = $isObj ? ($a['severity'] ?? 'warning') : 'warning';
+            $title = $isObj ? ($a['norma'] ?? 'Alerta normativa') : 'Alerta normativa';
+            $message = $isObj ? ($a['mensaje'] ?? (string)$a) : (string)$a;
+            @endphp
+            <li class="notify-item notify-item--{{ $sev }}">
+              <div class="notify-item__icon">
+                @if($sev === 'danger')
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                @elseif($sev === 'warning')
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 8v5m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 0 0-3.46 0L3.2 16c-.77 1.33.19 3 1.73 3Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                @else
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M13 16h-1V8h-1m2 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                @endif
+              </div>
+              <div class="notify-item__content">
+                <div class="notify-item__title">{{ $title }}</div>
+                <div class="notify-item__text">{{ $message }}</div>
+              </div>
+              <div class="notify-item__tag">
+                <span class="chip chip-{{ $sev }}">
+                  {{ $sev === 'danger' ? 'Crítica' : ($sev === 'warning' ? 'Atención' : 'Info') }}
+                </span>
+              </div>
+            </li>
+            @endforeach
+          </ul>
+          @endif
+        </div>
+      </div>
+    </div>
+  </div>
+
   {{-- F1: Tanque + COV (todos los días) --}}
   <div class="row g-2 mb-2">
     {{-- Inventario --}}
@@ -228,76 +297,6 @@
             <small class="text-muted">{{ $kpis['last_day_str'] ?? '—' }}</small>
           </div>
           <div id="homeGraficaDiaria" class="chart-190"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  {{-- F3: Notificaciones --}}
-  <div class="row g-2">
-    <div class="col-12">
-      <div class="card notify-card h-100 shadow-sm">
-        <div class="card-header d-flex align-items-center justify-content-between py-2">
-          <div class="d-flex align-items-center gap-2">
-            {{-- Ícono inline (no dependencias) --}}
-            <svg class="notify-icon-title" width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2Zm6-6v-5a6 6 0 0 0-12 0v5l-2 2v1h16v-1l-2-2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-            </svg>
-            <h6 class="mb-0 fw-semibold">Notificaciones, parámetros legales y normativos</h6>
-          </div>
-
-          <span class="badge notify-badge-count">
-            {{ empty($alerts) ? '0' : count($alerts) }}
-          </span>
-        </div>
-
-        <div class="card-body py-2">
-          @if(empty($alerts))
-          <div class="notify-empty">
-            <div class="notify-empty__icon">😊</div>
-            <div class="notify-empty__title">Sin alertas</div>
-            <div class="notify-empty__text text-muted">Todo en orden por ahora.</div>
-          </div>
-          @else
-          <ul class="notify-list">
-            @foreach($alerts as $a)
-            @php
-            // Soporta strings o arrays estructurados {severity, norma, mensaje}
-            $isObj = is_array($a);
-            $sev = $isObj ? ($a['severity'] ?? 'warning') : 'warning';
-            $title = $isObj ? ($a['norma'] ?? 'Alerta normativa') : 'Alerta normativa';
-            $message = $isObj ? ($a['mensaje'] ?? (string)$a) : (string)$a;
-            @endphp
-            <li class="notify-item notify-item--{{ $sev }}">
-              <div class="notify-item__icon">
-                @if($sev === 'danger')
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                </svg>
-                @elseif($sev === 'warning')
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 8v5m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 0 0-3.46 0L3.2 16c-.77 1.33.19 3 1.73 3Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                </svg>
-                @else
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M13 16h-1V8h-1m2 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                </svg>
-                @endif
-              </div>
-              <div class="notify-item__content">
-                <div class="notify-item__title">{{ $title }}</div>
-                <div class="notify-item__text">{{ $message }}</div>
-              </div>
-              <div class="notify-item__tag">
-                <span class="chip chip-{{ $sev }}">
-                  {{ $sev === 'danger' ? 'Crítica' : ($sev === 'warning' ? 'Atención' : 'Info') }}
-                </span>
-              </div>
-            </li>
-            @endforeach
-          </ul>
-          @endif
         </div>
       </div>
     </div>

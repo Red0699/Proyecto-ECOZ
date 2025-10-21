@@ -88,5 +88,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/datos/preview/cancel',  [DataController::class, 'cancelPreviewImport'])->name('datos.preview.cancel');
     Route::get('/normativa', [NormativaController::class, 'index'])
         ->name('normativas.index');
-    Route::get('/estimaciones', [EstimacionesController::class, 'index'])->name('estimaciones.static');
+    Route::get('/estimaciones', [EstimacionesController::class, 'index'])->name('estimaciones.index');
+
+    Route::get('/acerca-de', function () {
+        return view('content.acerca-de.index');
+    })->name('acerca-de');
 });

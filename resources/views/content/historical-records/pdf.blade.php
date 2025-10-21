@@ -180,7 +180,7 @@
         </div>
         <div class="col">
             <div class="card">
-                <div class="kpi-label">CO₂e total</div>
+                <div class="kpi-label">CO₂ total</div>
                 <div class="kpi-value">{{ number_format($kpis['co2_total_kg'] ?? 0, 3) }} kg</div>
             </div>
         </div>
@@ -188,7 +188,7 @@
             <div class="card">
                 <div class="kpi-label">Factor (CO₂/COV)</div>
                 <div class="kpi-value">
-                    @if(!empty($kpis['factor_cov_to_co2'])) {{ number_format($kpis['factor_cov_to_co2'], 4) }} kg/kg
+                    @if(!empty($kpis['factor_cov_to_co2'])) {{ number_format($kpis['factor_cov_to_co2'], 4) }} kg
                     @else — @endif
                 </div>
             </div>

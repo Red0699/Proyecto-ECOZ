@@ -19,19 +19,19 @@
       "url": "/datos",
       "name": "Datos",
       "icon": "menu-icon tf-icons ri-database-2-line",
-      "slug": "datos"
+      "slug": "datos.index"
     },
     {
       "url": "/normativa",
       "name": "Normativa",
       "icon": "menu-icon tf-icons ri-scales-3-line",
-      "slug": "normativa"
+      "slug": "normativas.index"
     },
     {
       "url": "/estimaciones",
       "name": "Estimaciones",
       "icon": "menu-icon tf-icons ri-calculator-line",
-      "slug": "estimaciones"
+      "slug": "estimaciones.index"
     },
     {
       "menuHeader": "Administración"
