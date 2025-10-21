@@ -74,6 +74,9 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::get('/registro-historico', [HistoricalRecordController::class, 'index'])->name('registro-historico');
+    Route::get('/registro-historico/pdf', [HistoricalRecordController::class, 'pdf'])->name('registro-historico.pdf');
+    Route::get('/registro-historico/pdf/preview', [HistoricalRecordController::class, 'pdfPreview'])
+        ->name('registro-historico.pdf.preview');
 
     Route::get('/datos', [DataController::class, 'index'])->name('datos.index');
     Route::post('/datos', [DataController::class, 'store'])->name('datos.store');

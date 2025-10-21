@@ -1,0 +1,93 @@
+/* =======================
+   Página: Normativas
+   ======================= */
+
+/* =======================
+   Página: Normativas (Informativa)
+   ======================= */
+
+.norma-card {
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: all 0.25s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  }
+
+  &__bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: #3b82f6; /* Azul info */
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+}
+
+.norma-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 0.6rem;
+  color: #fff;
+  background: #3b82f6;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.25);
+}
+
+.norma-chip {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.norma-block {
+  background: #f8fafc;
+  border: 1px dashed rgba(59, 130, 246, 0.25);
+  border-radius: 0.7rem;
+  padding: 0.7rem 0.8rem;
+  margin-top: 0.5rem;
+
+  &__title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1e40af;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+
+  &__text {
+    font-size: 0.9rem;
+    color: #334155;
+    line-height: 1.4;
+  }
+}
+
+.norma-page h5 {
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+.norma-page small.text-muted {
+  font-size: 0.85rem;
+}
+
+/* Responsivo */
+@media (min-width: 992px) {
+  .norma-card .card-body {
+    padding: 1rem;
+  }
+}

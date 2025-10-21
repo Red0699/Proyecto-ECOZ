@@ -1,0 +1,37 @@
+/* resources/assets/scss/pages/page-historical-records.scss */
+
+.hrx {
+  .hrx-pills .btn {
+    border-radius: 999px;
+    padding: .35rem .9rem;
+  }
+
+  .hrx-kpi {
+    border: none;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(0,0,0,.05);
+
+    .hrx-kpi-label {
+      font-size: .8rem;
+      color: #6b7280;
+      margin-bottom: .35rem;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+    .hrx-kpi-value {
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: #111827;
+      span { font-weight: 500; color: #6b7280; font-size: .9rem; margin-left: .15rem; }
+    }
+  }
+
+  .card {
+    border: 1px solid #eef0f2;
+    border-radius: 14px;
+  }
+  h6 {
+    font-weight: 700;
+    color: #111827;
+  }
+}

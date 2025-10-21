@@ -1,32 +1,83 @@
 @extends('layouts/contentNavbarLayout')
 @section('title','Normativas')
 
+@section('page-style')
+  @vite('resources/assets/vendor/scss/pages/page-normativas.scss')
+@endsection
+
 @section('content')
-<div class="container-xxl py-3">
-  <div class="d-flex align-items-center justify-content-between mb-2">
-    <h6 class="mb-0">Normativas aplicables</h6>
-    <small class="text-muted">Por estación o generales</small>
+@php
+  $user = Auth::user();
+  $miEstacionId = $user?->estacion_id;
+  $miEstacionNombre = $user?->estacion?->nombre ?? '—';
+@endphp
+
+<div class="container-xxl py-3 norma-page">
+  <!-- Encabezado -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <svg width="22" height="22" viewBox="0 0 24 24" class="text-primary">
+        <path d="M6 4h12a2 2 0 0 1 2 2v11.5a.5.5 0 0 1-.76.43L12 14l-7.24 3.93A.5.5 0 0 1 4 17.5V6a2 2 0 0 1 2-2Z" fill="currentColor"/>
+      </svg>
+      <div>
+        <h5 class="mb-0 fw-semibold">Normativas aplicables</h5>
+        <small class="text-muted">Generales y específicas por estación</small>
+      </div>
+    </div>
+    <span class="badge bg-label-primary border">
+      Estación: <strong class="ms-1">{{ $miEstacionNombre }}</strong>
+    </span>
   </div>
 
   @if($normativas->isEmpty())
     <div class="alert alert-info">No hay normativas registradas.</div>
   @else
-    <div class="row g-2">
+    <div id="normaGrid" class="row g-3">
       @foreach($normativas as $n)
-        <div class="col-12 col-lg-6">
-          <div class="card h-100 shadow-sm">
+        @php
+          $scope = 'general';
+          if (!is_null($n->estacion_id)) {
+            $scope = ($n->estacion_id === $miEstacionId) ? 'mine' : 'other';
+          }
+        @endphp
+
+        <div class="col-12 col-lg-6 norma-item" data-scope="{{ $scope }}">
+          <div class="card norma-card h-100 shadow-sm">
+            <div class="norma-card__bar is-info"></div>
+
             <div class="card-body">
-              <h6 class="mb-1">{{ $n->titulo }}</h6>
-              @if($n->codigo)
-                <small class="text-muted d-block mb-1">{{ $n->codigo }}</small>
-              @endif
+              <div class="d-flex align-items-start gap-2 mb-2">
+                <div class="norma-icon is-info">
+                  <svg width="16" height="16" viewBox="0 0 24 24">
+                    <path d="M12 17v-6m0-3h.01M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Z" 
+                          stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                  </svg>
+                </div>
+
+                <div class="flex-grow-1">
+                  <div class="d-flex flex-wrap align-items-center gap-2">
+                    <h6 class="mb-0 fw-semibold">{{ $n->titulo }}</h6>
+                    @if($n->codigo)
+                      <span class="norma-chip">{{ $n->codigo }}</span>
+                    @endif
+                  </div>
+                  <small class="text-muted">
+                    @if($scope === 'mine') Aplica a: <strong>{{ $miEstacionNombre }}</strong>
+                    @elseif($scope === 'general') Aplica: <strong>General</strong>
+                    @else Aplica a otra estación
+                    @endif
+                  </small>
+                </div>
+              </div>
+
               @if($n->reglamentacion)
-                <p class="mb-2"><strong>Reglamentación:</strong> {{ $n->reglamentacion }}</p>
-              @endif
-              @if($n->sanciones)
-                <p class="mb-0"><strong>Sanciones:</strong> {{ $n->sanciones }}</p>
+                <div class="norma-block">
+                  <div class="norma-block__title">Reglamentación</div>
+                  <div class="norma-block__text">{{ $n->reglamentacion }}</div>
+                </div>
               @endif
             </div>
+
           </div>
         </div>
       @endforeach
