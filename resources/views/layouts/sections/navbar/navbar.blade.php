@@ -6,6 +6,14 @@ $navbarDetached = ($navbarDetached ?? '');
 
 @endphp
 
+@php
+// Fallback por si el View Composer no inyectó variables
+if (!isset($navAlerts) || !is_array($navAlerts)) {
+$navAlerts = \App\Support\AlertsBuilder::forUserNavbar(\Illuminate\Support\Facades\Auth::user());
+}
+$navAlertsCount = $navAlertsCount ?? count($navAlerts ?? []);
+@endphp
+
 <!-- Navbar -->
 @if(isset($navbarDetached) && $navbarDetached == 'navbar-detached')
 <nav class="layout-navbar {{$containerNav}} navbar navbar-expand-xl {{$navbarDetached}} align-items-center bg-navbar-theme" id="layout-navbar">
@@ -47,13 +55,151 @@ $navbarDetached = ($navbarDetached ?? '');
         <!-- /Search -->
         <ul class="navbar-nav flex-row align-items-center ms-auto">
 
-          <!-- Notificaciones (visual) -->
-          <li class="nav-item me-3 px-4">
-            <a class="nav-link position-relative p-0" href="javascript:void(0);" aria-label="Notificaciones">
-              <i class="ri-notification-line ri-28px"></i>
-              
+          <!-- Notificaciones -->
+          <li class="nav-item dropdown me-2 px-2">
+            <a class="nav-link position-relative p-0"
+              id="notifDropdown"
+              href="javascript:void(0);"
+              role="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+              aria-label="Notificaciones"
+              data-key="ecoz:notif:last-seen:{{ Auth::id() }}"
+              data-count="{{ $navAlertsCount ?? 0 }}">
+              <i class="ri-notification-3-line ri-28px"></i>
+
+              @if(($navAlertsCount ?? 0) > 0)
+              <span class="notifbell-dot" title="Tienes notificaciones nuevas"></span>
+              @endif
             </a>
+
+            <div class="dropdown-menu dropdown-menu-end notifpro-dropdown mt-3 p-0" aria-labelledby="notifDropdown">
+              {{-- Header --}}
+              <div class="notifpro-head d-flex align-items-center justify-content-between px-3 py-2">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="ri-notification-3-fill text-primary"></i>
+                  <span class="notifpro-title">Notificaciones</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="notifpro-pill">{{ $navAlertsCount ?? 0 }} nuevas</span>
+                </div>
+              </div>
+              <div class="notifpro-sep"></div>
+
+              {{-- Lista --}}
+              <div class="notifpro-list" role="list">
+                @forelse(($navAlerts ?? []) as $a)
+                @php
+                $sev = $a['severity'] ?? 'info';
+                $sent = $a['sent_at_str'] ?? null;
+                $safeId = $a['id'] ?? md5(($a['norma'] ?? '') . '|' . ($a['sent_at'] ?? microtime(true)));
+                $chip = $sev === 'danger' ? 'chip-danger' : ($sev === 'warning' ? 'chip-warning' : 'chip-info');
+                @endphp
+
+                <a role="listitem"
+                  class="notifpro-item d-flex align-items-start gap-3 px-3 py-3"
+                  href="{{ route('inicio') }}#notificaciones"
+                  data-alert-id="{{ $safeId }}"
+                  data-unread="true">
+                  {{-- Avatar/ícono --}}
+                  <div class="notifpro-avatar {{ $sev }}">
+                    @if($sev === 'danger') <i class="ri-error-warning-line"></i>
+                    @elseif($sev === 'warning') <i class="ri-alert-line"></i>
+                    @else <i class="ri-information-line"></i>
+                    @endif
+                  </div>
+
+                  {{-- Contenido --}}
+                  <div class="flex-grow-1 min-w-0">
+                    <div class="notifpro-title-2 text-truncate">{{ $a['norma'] ?? 'Alerta' }}</div>
+
+                    @if(!empty($a['mensaje']))
+                    <div class="notifpro-text text-truncate-2">{{ $a['mensaje'] }}</div>
+                    @endif
+
+                    <div class="notifpro-tags">
+                      <span class="notifpro-chip {{ $chip }}">
+                        {{ $sev === 'danger' ? 'Crítica' : ($sev === 'warning' ? 'Atención' : 'Info') }}
+                      </span>
+                      @if($sent)<span class="notifpro-date" title="Enviado: {{ $sent }}">{{ $sent }}</span>@endif
+                    </div>
+                  </div>
+
+                  {{-- Dot de no leído --}}
+                  <span class="notifpro-dot {{ 'dot-'.$sev }}"></span>
+                </a>
+
+                @empty
+                <div class="px-3 py-4 text-center">
+                  <div class="notifpro-empty-emoji">🎉</div>
+                  <div class="text-muted small">No tienes notificaciones</div>
+                </div>
+                @endforelse
+              </div>
+
+              <div class="notifpro-sep"></div>
+              {{-- Footer --}}
+              <div class="px-3 py-2">
+                <a href="{{ route('inicio') }}#notificaciones" class="btn btn-sm btn-primary w-100">
+                  Ver todas las notificaciones
+                </a>
+              </div>
+            </div>
           </li>
+
+          @push('scripts')
+          <script>
+            document.addEventListener('DOMContentLoaded', () => {
+              const trigger = document.getElementById('notifDropdown');
+              if (!trigger) return;
+
+              const dot = trigger.querySelector('.notifbell-dot');
+              const key = trigger.dataset.key || 'ecoz:notif:last-seen';
+              const countNow = Number(trigger.dataset.count || 0);
+              const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+              function getStored() {
+                try {
+                  return JSON.parse(localStorage.getItem(key) || '{}');
+                } catch {
+                  return {};
+                }
+              }
+
+              function setStored(v) {
+                localStorage.setItem(key, JSON.stringify(v));
+              }
+
+              function hideDot() {
+                if (dot) dot.classList.add('d-none');
+              }
+
+              // Al cargar: si ya se vieron HOY y el conteo coincide, apaga el dot
+              const saved = getStored();
+              if (saved.date === today && Number(saved.count) === countNow) {
+                hideDot();
+              }
+
+              // Al abrir realmente el dropdown (evento Bootstrap)
+              trigger.addEventListener('shown.bs.dropdown', () => {
+                setStored({
+                  date: today,
+                  count: countNow
+                });
+                hideDot();
+              });
+
+              // Fallback: si alguien hace click directo (por si otro tema evita el evento)
+              trigger.addEventListener('click', () => {
+                setStored({
+                  date: today,
+                  count: countNow
+                });
+                hideDot();
+              });
+            });
+          </script>
+          @endpush
 
           <!-- User -->
           <li class="nav-item navbar-dropdown dropdown-user dropdown">

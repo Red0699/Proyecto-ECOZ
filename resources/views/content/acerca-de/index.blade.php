@@ -1,7 +1,6 @@
 @extends('layouts/contentNavbarLayout')
 @section('title','Acerca del sistema')
 
-{{-- Estilos propios de la página --}}
 @section('page-style')
 @vite('resources/assets/vendor/scss/pages/page-acerca.scss')
 @endsection
@@ -47,7 +46,7 @@
             <span class="badge bg-label-success rounded-pill">ApexCharts</span>
             <span class="badge bg-label-info rounded-pill">Laravel</span>
             <span class="badge bg-label-secondary rounded-pill">MySQL</span>
-            <span class="badge bg-label-danger rounded-pill">Control Ambiental</span>
+            <span class="badge bg-label-danger rounded-pill">Control ambiental</span>
           </div>
         </div>
       </div>
@@ -62,7 +61,7 @@
           <div class="icon-wrap mb-3">
             <i class="ri-gas-station-line"></i>
           </div>
-          <h5 class="mb-2">Respiración & Trabajo</h5>
+          <h5 class="mb-2">Respiración y trabajo</h5>
           <p class="text-muted mb-0">
             Estimación de pérdidas por respiración diaria y por operaciones de abastecimiento/descargue,
             integrando comportamiento de presión y volumen del tanque.
@@ -76,10 +75,9 @@
           <div class="icon-wrap mb-3">
             <i class="ri-bar-chart-2-line"></i>
           </div>
-          <h5 class="mb-2">Datos & Visualización</h5>
+          <h5 class="mb-2">Datos y visualización</h5>
           <p class="text-muted mb-0">
-            Cálculos reproducibles y visualizaciones claras para apoyar decisiones operativas y
-            seguimiento de tendencias en el tiempo.
+            Cálculos reproducibles y visualizaciones claras.
           </p>
         </div>
       </div>
@@ -90,7 +88,7 @@
           <div class="icon-wrap mb-3">
             <i class="ri-shield-check-line"></i>
           </div>
-          <h5 class="mb-2">Enfoque Normativo</h5>
+          <h5 class="mb-2">Enfoque normativo</h5>
           <p class="text-muted mb-0">
             Alineado con parámetros legales y buenas prácticas de medición para fortalecer el control ambiental en EDS.
           </p>
