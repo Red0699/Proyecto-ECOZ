@@ -1,96 +1,89 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
-// Controladores de la plantilla Materio
-use App\Http\Controllers\dashboard\Analytics;
-use App\Http\Controllers\layouts\WithoutMenu;
-use App\Http\Controllers\layouts\WithoutNavbar;
-use App\Http\Controllers\layouts\Fluid;
-use App\Http\Controllers\layouts\Container;
-use App\Http\Controllers\layouts\Blank;
-use App\Http\Controllers\pages\AccountSettingsAccount;
-use App\Http\Controllers\pages\AccountSettingsNotifications;
-use App\Http\Controllers\pages\AccountSettingsConnections;
-use App\Http\Controllers\pages\MiscError;
-use App\Http\Controllers\pages\MiscUnderMaintenance;
-use App\Http\Controllers\authentications\LoginBasic;
-use App\Http\Controllers\authentications\RegisterBasic;
-use App\Http\Controllers\authentications\ForgotPasswordBasic;
-use App\Http\Controllers\cards\CardBasic;
-use App\Http\Controllers\user_interface\Accordion;
-use App\Http\Controllers\user_interface\Alerts;
-use App\Http\Controllers\user_interface\Badges;
-use App\Http\Controllers\user_interface\Buttons;
-use App\Http\Controllers\user_interface\Carousel;
-use App\Http\Controllers\user_interface\Collapse;
-use App\Http\Controllers\user_interface\Dropdowns;
-use App\Http\Controllers\user_interface\Footer;
-use App\Http\Controllers\user_interface\ListGroups;
-use App\Http\Controllers\user_interface\Modals;
-use App\Http\Controllers\user_interface\Navbar;
-use App\Http\Controllers\user_interface\Offcanvas;
-use App\Http\Controllers\user_interface\PaginationBreadcrumbs;
-use App\Http\Controllers\user_interface\Progress;
-use App\Http\Controllers\user_interface\Spinners;
-use App\Http\Controllers\user_interface\TabsPills;
-use App\Http\Controllers\user_interface\Toasts;
-use App\Http\Controllers\user_interface\TooltipsPopovers;
-use App\Http\Controllers\user_interface\Typography;
-use App\Http\Controllers\extended_ui\PerfectScrollbar;
-use App\Http\Controllers\extended_ui\TextDivider;
-use App\Http\Controllers\icons\RiIcons;
-use App\Http\Controllers\form_elements\BasicInput;
-use App\Http\Controllers\form_elements\InputGroups;
-use App\Http\Controllers\form_layouts\VerticalForm;
-use App\Http\Controllers\form_layouts\HorizontalForm;
-use App\Http\Controllers\tables\Basic as TablesBasic;
-
-// Tus controladores
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\HistoricalRecordController;
 use App\Http\Controllers\DataController;
 use App\Http\Controllers\NormativaController;
 use App\Http\Controllers\EstimacionesController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PerfilController;
 
-// Login 
-Route::get('/login', function () {
-    return view('content.authentications.auth-login-basic');
-})->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::middleware('guest')->group(function () {
+    // Raíz: lleva al login si no hay sesión
+    Route::get('/', function () {
+        return redirect()->route('login');
+    })->name('root');
 
-// Logout
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    // Login (vista y acción)
+    Route::view('/login', 'content.authentications.auth-login-basic')->name('login');
+    Route::post('/login', [AuthController::class, 'login'])
+        ->middleware('throttle:6,1') // 6 intentos por minuto
+        ->name('login.post');
+});
 
-// --- GRUPO PARA USUARIOS AUTENTICADOS ---
-Route::middleware(['auth'])->group(function () {
 
-    Route::get('/inicio', [\App\Http\Controllers\HomeController::class, 'index'])->name('inicio');
+Route::post('/logout', [AuthController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
 
+/*
+|--------------------------------------------------------------------------
+| Área autenticada
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')->group(function () {
 
-    Route::middleware(['auth', 'is.admin'])->group(function () {
+    // Dashboard / Inicio
+    Route::get('/inicio', [HomeController::class, 'index'])->name('inicio');
+
+    // Vista de perfil de usuario
+    Route::get('/perfil', [PerfilController::class, 'edit'])->name('profile.edit');
+    Route::put('/perfil', [PerfilController::class, 'update'])->name('profile.update');
+    Route::put('/perfil/password', [PerfilController::class, 'updatePassword'])->name('profile.password.update');
+
+    // Redirecciones de cortesía
+    Route::redirect('/home', '/inicio', 301)->name('home.redirect');
+
+    // Administración
+    Route::middleware('is.admin')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('usuarios', UserController::class);
     });
 
+    // Registro histórico
     Route::get('/registro-historico', [HistoricalRecordController::class, 'index'])->name('registro-historico');
     Route::get('/registro-historico/pdf', [HistoricalRecordController::class, 'pdf'])->name('registro-historico.pdf');
     Route::get('/registro-historico/pdf/preview', [HistoricalRecordController::class, 'pdfPreview'])
         ->name('registro-historico.pdf.preview');
 
-    Route::get('/datos', [DataController::class, 'index'])->name('datos.index');
-    Route::post('/datos', [DataController::class, 'store'])->name('datos.store');
+    // Datos (carga, lotes, confirmaciones)
+    Route::prefix('datos')->name('datos.')->group(function () {
+        Route::get('/', [DataController::class, 'index'])->name('index');
+        Route::post('/', [DataController::class, 'store'])->name('store');
 
-    Route::get('/datos/lotes', [DataController::class, 'lotes'])->name('datos.lotes');
-    Route::delete('/datos/lotes/{id}', [DataController::class, 'destroyLote'])->name('datos.lotes.destroy');
+        Route::get('/lotes', [DataController::class, 'lotes'])->name('lotes');
+        Route::delete('/lotes/{id}', [DataController::class, 'destroyLote'])
+            ->whereNumber('id')
+            ->name('lotes.destroy');
 
-    Route::post('/datos/preview/confirm', [DataController::class, 'confirmPreviewImport'])->name('datos.preview.confirm');
-    Route::post('/datos/preview/cancel',  [DataController::class, 'cancelPreviewImport'])->name('datos.preview.cancel');
-    Route::get('/normativa', [NormativaController::class, 'index'])
-        ->name('normativas.index');
+        Route::post('/preview/confirm', [DataController::class, 'confirmPreviewImport'])->name('preview.confirm');
+        Route::post('/preview/cancel',  [DataController::class, 'cancelPreviewImport'])->name('preview.cancel');
+    });
+
+    // Normativa
+    Route::get('/normativa', [NormativaController::class, 'index'])->name('normativas.index');
+
+    // Estimaciones
     Route::get('/estimaciones', [EstimacionesController::class, 'index'])->name('estimaciones.index');
 
-    Route::get('/acerca-de', function () {
-        return view('content.acerca-de.index');
-    })->name('acerca-de');
+    // Acerca del sistema
+    Route::view('/acerca-de', 'content.acerca-de.index')->name('acerca-de');
+});
+
+
+Route::fallback(function () {
+    return auth()->check()
+        ? redirect()->route('inicio') // ->with('warning', 'La ruta no existe.')
+        : redirect()->route('login');
 });

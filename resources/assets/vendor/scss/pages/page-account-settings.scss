@@ -1,13 +1,341 @@
-// * Account Settings
-// *******************************************************************************
+/* ---------- Helpers ---------- */
+$radius-xl: 1rem;           // 16px
+$radius-2xl: 1.25rem;       // 20px
+$shadow-soft: 0 8px 24px rgba(15, 30, 67, .06);
+$shadow-strong: 0 14px 42px rgba(15, 30, 67, .12);
 
-@import '../_custom-variables/pages';
-@import '../_bootstrap-extended/include';
+$primary: var(--bs-primary, #7367f0);
+$border: var(--bs-border-color, #e4e6e8);
+$muted: var(--bs-secondary-color, #6c757d);
+$bg-body: var(--bs-body-bg, #f5f6fa);
+$bg-card: var(--bs-body-bg, #fff);
+$text: var(--bs-body-color, #4b4b4b);
 
-.api-key-actions {
-  position: absolute !important;
-  top: 0.75rem;
-  @include app-ltr() {
-    right: 0.5rem;
+/* ---------- Contenedor principal ---------- */
+.page-account-settings {
+  color: $text;
+
+  .card {
+    border: 1px solid $border;
+    border-radius: $radius-2xl;
+    box-shadow: $shadow-soft;
+    overflow: hidden;
+    background: $bg-card;
   }
+}
+
+/* ---------- Portada (cover) y cabecera ---------- */
+.profile-cover {
+  height: 185px;
+  border-radius: $radius-2xl $radius-2xl 0 0;
+  background: linear-gradient(120deg, #6ad0ce 0%, #bfe6df 40%, #f3dbd2 70%, #f8b4b8 100%);
+}
+
+.profile-header {
+  margin-top: -42px;
+}
+
+/* ---------- Avatar por iniciales (fallback) ---------- */
+.avatar-initials {
+  width: 84px;
+  height: 84px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 28px;
+  color: #fff;
+  background: #a0a7ff;
+  box-shadow: 0 10px 28px rgba(115, 103, 240, .18);
+
+  /* Variantes de color por “tema” (opcional) */
+  &.avatar-primary   { background: #7367f0; }
+  &.avatar-success   { background: #28c76f; }
+  &.avatar-info      { background: #00cfe8; }
+  &.avatar-warning   { background: #ff9f43; }
+  &.avatar-danger    { background: #ea5455; }
+}
+
+/* ---------- Pills / Tabs ---------- */
+.nav-pills {
+  gap: .375rem;
+
+  .nav-link {
+    border-radius: .75rem;
+    padding: .5rem .9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: $muted;
+    border: 1px solid transparent;
+    transition: all .18s ease;
+
+    i { font-size: 1.05rem; line-height: 1; }
+
+    &:hover {
+      background-color: rgba(115, 103, 240, .08);
+      color: $primary;
+    }
+
+    &.active {
+      color: $primary;
+      background: rgba(115, 103, 240, .12);
+      border-color: rgba(115, 103, 240, .22);
+      box-shadow: inset 0 0 0 1px rgba(115, 103, 240, .08);
+    }
+  }
+}
+
+/* ---------- Formularios ---------- */
+.form-label {
+  font-weight: 600;
+  color: var(--bs-heading-color, #34495e);
+}
+
+.form-control {
+  border-radius: .75rem;
+  border-color: $border;
+  transition: box-shadow .15s ease, border-color .15s ease;
+
+  &:focus {
+    border-color: rgba(115, 103, 240, .5);
+    box-shadow: 0 0 0 .20rem rgba(115, 103, 240, .15);
+  }
+
+  &.is-invalid {
+    box-shadow: 0 0 0 .20rem rgba(234, 84, 85, .15);
+  }
+}
+
+.input-group {
+  .input-group-text {
+    border-radius: .75rem;
+  }
+
+  .input-group-merge > .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .input-group-merge > .input-group-text {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  /* Botón para mostrar/ocultar contraseña */
+  .toggle-pass {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color .15s ease, color .15s ease;
+
+    &:hover {
+      background-color: rgba(115, 103, 240, .08);
+      color: $primary;
+    }
+  }
+}
+
+/* ---------- Botones ---------- */
+.btn {
+  border-radius: .8rem;
+  box-shadow: none;
+
+  &.btn-primary {
+    box-shadow: 0 8px 18px rgba(115, 103, 240, .18);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(115, 103, 240, .22);
+    }
+  }
+
+  &.btn-dark {
+    box-shadow: 0 8px 18px rgba(15, 30, 67, .18);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(15, 30, 67, .22);
+    }
+  }
+}
+
+/* ---------- Chips/Badges ---------- */
+.badge.bg-label-primary {
+  color: $primary;
+  background: rgba(115, 103, 240, .12);
+  border: 1px solid rgba(115, 103, 240, .22);
+  padding: .35rem .6rem;
+  border-radius: .65rem;
+}
+
+/* ---------- Alertas ---------- */
+.alert {
+  border: 1px solid $border;
+  border-radius: .9rem;
+  box-shadow: $shadow-soft;
+
+  &.alert-success {
+    border-color: rgba(40, 199, 111, .25);
+    background: rgba(40, 199, 111, .08);
+    color: #1d9c5c;
+  }
+
+  &.alert-danger, &.alert-error {
+    border-color: rgba(234, 84, 85, .25);
+    background: rgba(234, 84, 85, .08);
+    color: #c24444;
+  }
+}
+
+/* ---------- Tab content: espaciado ---------- */
+.tab-content {
+  .tab-pane {
+    animation: fadeUp .18s ease;
+  }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 991.98px) {
+  .profile-cover { height: 150px; }
+  .avatar-initials { width: 72px; height: 72px; font-size: 24px; }
+}
+
+@media (max-width: 575.98px) {
+  .profile-cover { height: 130px; }
+  .nav-pills { gap: .25rem; }
+  .nav-pills .nav-link { padding: .45rem .7rem; }
+}
+
+/* ---------- Utilidades opcionales ---------- */
+/* Chip genérico por si lo usas en otros lados */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .25rem .55rem;
+  border-radius: 999px;
+  background: rgba(115, 103, 240, .08);
+  color: $primary;
+  border: 1px solid rgba(115, 103, 240, .22);
+  font-size: .8125rem;
+}
+
+/* ——— Mejora visual del cover ——— */
+.profile-cover {
+  position: relative;
+  height: 200px; // un poco más alto
+  background: linear-gradient(120deg,#66c9c7 0%,#bfe6df 38%,#f3dbd2 70%,#f6b3b8 100%);
+  mask-image: radial-gradient(ellipse at top left, #000 70%, transparent 120%);
+}
+
+/* ——— Avatar con “ring” y leve desplazamiento ——— */
+.avatar-initials {
+  translate: 0 8px;
+}
+.avatar-ring {
+  position: relative;
+  &:before {
+    content: "";
+    position: absolute; inset: -6px;
+    border-radius: 22px;
+    background: conic-gradient(from 180deg, rgba(115,103,240,.45), rgba(0,207,232,.45), rgba(40,199,111,.45), rgba(115,103,240,.45));
+    filter: blur(.5px);
+    z-index: -1;
+  }
+}
+
+/* ——— Tag “Perfil” arriba a la derecha ——— */
+.profile-tag { backdrop-filter: blur(6px); }
+
+/* ——— Header compacto ——— */
+.profile-header {
+  margin-top: -46px;
+  .vr { opacity: .35; }
+}
+
+/* ——— Tabs pegajosos ——— */
+.tabs-sticky {
+  position: sticky;
+  top: 64px; /* ajusta si tu navbar es más alta */
+  z-index: 10;
+  background: var(--bs-body-bg, #fff);
+  padding: .25rem 0 .5rem;
+  border-bottom: 1px solid var(--bs-border-color, #e7eaee);
+}
+
+/* ——— Secciones con título y cuerpo en card light ——— */
+.section-title {
+  font-weight: 600;
+  color: var(--bs-heading-color, #2f3b4a);
+  margin-bottom: .35rem;
+}
+.section-body {
+  border: 1px dashed var(--bs-border-color, #e7eaee);
+  background: rgba(115,103,240,.02);
+  padding: 1rem;
+  border-radius: .9rem;
+}
+
+/* Inputs más grandes y consistentes */
+.form-label { margin-bottom: .35rem; }
+.form-control { height: 44px; }
+
+/* Botones un poquito más altos y con micro-interacción */
+.btn { padding:.6rem 1rem; transition: transform .12s ease, box-shadow .12s ease; }
+.btn:active { transform: translateY(0); }
+.btn-primary:hover, .btn-dark:hover { transform: translateY(-1px); }
+
+/* Dark mode – opcional si usas toggle de Materio */
+@media (prefers-color-scheme: dark) {
+  .section-body { background: rgba(115,103,240,.06); }
+  .tabs-sticky { background: var(--bs-body-bg, #111318); }
+}
+
+/* Espaciado más cómodo entre cover y encabezado */
+:root { --profile-pull-up: 30px; } /* antes era ~46px */
+
+.profile-header { 
+  margin-top: calc(var(--profile-pull-up) * -1);
+}
+
+/* Ajustes responsivos: un poquito menos de superposición en pantallas grandes */
+@media (min-width: 992px) {
+  :root { --profile-pull-up: 20px; }
+}
+@media (min-width: 1400px) {
+  :root { --profile-pull-up: 16px; }
+}
+
+/* === Cover a todo el ancho del card, sin recortes === */
+.page-account-settings .card {
+  overflow: hidden;                 
+}
+
+.profile-cover {
+  display: block;
+  width: 100%;
+  height: 220px;                    /* ajusta a tu gusto */
+  /* hereda los radios del card para que calcen perfecto */
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+
+  /* IMPORTANTE: quita cualquier máscara previa */
+  -webkit-mask: none !important;
+  mask: none !important;
+
+  /* (opcional) si dejaste algún padding/margen, elimínalo */
+  margin: 0;
+}
+
+
+@media (min-width: 1200px) {
+  .profile-cover { height: 240px; }
 }
