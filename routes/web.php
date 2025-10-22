@@ -79,6 +79,9 @@ Route::middleware('auth')->group(function () {
 
     // Acerca del sistema
     Route::view('/acerca-de', 'content.acerca-de.index')->name('acerca-de');
+
+    // Ayuda / Manual de usuario
+    Route::view('/ayuda', 'content.ayuda.index')->name('ayuda');
 });
 
 
