@@ -124,8 +124,7 @@
               <i class="ri-file-ppt-2-line ri-3x" style="color:#9ca3af;"></i>
             </div>
             <h6 class="mb-1">Manual de usuario</h6>
-            <p class="small text-muted">El manual se mostrará aquí cuando lo cargues o lo publiquemos. Mientras tanto, consulta el índice a la izquierda o descarga la guía rápida.</p>
-            <a href="javascript:void(0)" class="btn btn-sm btn-outline-primary mt-2">Ver guía rápida</a>
+            <p class="small text-muted">El manual se mostrará aquí cuando sea publicado.</p>
           </div>
         </div>
       </div>

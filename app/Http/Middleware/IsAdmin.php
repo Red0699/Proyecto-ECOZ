@@ -17,6 +17,6 @@ class IsAdmin
             return $next($request); 
         }
 
-        return redirect('/dashboard')->with('error', 'Acceso no autorizado.');
+        return redirect('/inicio')->with('error', 'Acceso no autorizado.');
     }
 }

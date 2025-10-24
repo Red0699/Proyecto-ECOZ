@@ -10,33 +10,33 @@ class DatosHistoricos extends Model
     protected $table = 'datos_historicos';
 
     protected $fillable = [
-        'estacion_id',
+        'estacion_id', 
         'lote_id',
-        'fecha',
-        'hora',
-        'temperatura_ambiente_c',
-        'velocidad_viento',
-        'humedad_ambiente',
-        'temperatura_interna_c',
-        'temperatura_interna_k',
-        'volumen_gl',
-        'descargue_combustible_gl',
-        'ventas_diarias_gl',
-        'diametro_tanque_in',
-        'presion_hidrostatica_pa',
-        'presion_hidrostatica_kpa',
-        'presion_psi',
-        'perdidas_respiracion_kg',
-        'variacion_formula_gl_1',
-        'perdidas_operacion_kg',
-        'variacion_formula_gl_2',
-        'perdidas_totales_cov_kg',
-        'cov_a_co2_kg',
-        'sumatoria_variacion_gl',
-        'variacion_eds_gl',
-        'presion_sat_octano_mmhg',
-        'presion_sat_heptano_mmhg',
-        'presion_sat_tolueno_mmhg',
+        'fecha', // Fecha 
+        'hora', // Hora
+        'temperatura_ambiente_c', //Temperatura ambiente (°C)
+        'velocidad_viento', // Velocidad del viento
+        'humedad_ambiente', // Humedad ambiente
+        'temperatura_interna_c', // Temperatura interna (°C)
+        'temperatura_interna_k', // Temperatura interna Kelvin
+        'volumen_gl', // Volumen (gl)
+        'descargue_combustible_gl', // Descargue combustible
+        'ventas_diarias_gl', // Ventas diarias (gl)
+        'diametro_tanque_in', // Diámetro del tanque (in)
+        'presion_hidrostatica_pa', // Presión hidrostática p=p*g*h (pa)
+        'presion_hidrostatica_kpa', // Presión hidrostática (kPa)
+        'presion_psi', // Presión por libra cuadrada (Psi)
+        'perdidas_respiracion_kg', // Emisión de vapor (kg/día) - Respiración COV
+        'variacion_formula_gl_1', // Valor faltante o sobrante diario (gl) - Según fórmula
+        'perdidas_operacion_kg', // Emisión de vapor (kg/día) - Trabajo en el tanque COV
+        'variacion_formula_gl_2', // Valor faltante o sobrante diario (gl) - Según fórmula
+        'perdidas_totales_cov_kg', // Pérdidas totales de emisión de vapor (kg/día) COV
+        'cov_a_co2_kg', // COV convertir a kg de CO2
+        'sumatoria_variacion_gl', // Sumatoria valor faltante o sobrante diario (gl) - Según fórmulas
+        'variacion_eds_gl', // Valor faltante o sobrante diario (gl) - Según eds
+        'presion_sat_octano_mmhg', // Presión de Sat de Octano MmHg
+        'presion_sat_heptano_mmhg', // Presión de Sat de n- Heptano
+        'presion_sat_tolueno_mmhg', // Presión de Sat de Tolueno
     ];
 
     protected $casts = [
