@@ -28,25 +28,8 @@ steps:
     entrypoint: bash
     args:
       - -ceu
-      - 
-      - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-  entrypoint: bash
-  args:
-    - -ceu
-    - |
-      echo "Using CONN_NAME=${_CONN_NAME}"
-      gcloud run deploy ${_SERVICE} \
-        --image ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA \
-        --region ${_REGION} \
-        --platform managed \
-        --allow-unauthenticated \
-        --service-account ${_RUN_SA} \
-        --execution-environment gen2 \
-        --add-cloudsql-instances "${_CONN_NAME}" \
-        --set-secrets APP_KEY=APP_KEY:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest \
-        --set-env-vars APP_ENV=production,APP_DEBUG=false,APP_URL=https://${_SERVICE}-${_REGION}.a.run.app,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=127.0.0.1,DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
-        --cpu=1 --memory=512Mi
-
+      - |
+        echo "Using CONN_NAME=${_CONN_NAME}"
         gcloud run deploy ${_SERVICE} \
           --image ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA \
           --region ${_REGION} \
@@ -54,11 +37,9 @@ steps:
           --allow-unauthenticated \
           --service-account ${_RUN_SA} \
           --execution-environment gen2 \
-          --add-cloudsql-instances ${_CONN_NAME} \
-          --set-secrets \
-            APP_KEY=APP_KEY:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest \
-          --set-env-vars \
-            APP_ENV=production,APP_DEBUG=false,APP_URL=https://${_SERVICE}-${_REGION}.a.run.app,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=127.0.0.1,DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
+          --add-cloudsql-instances "${_CONN_NAME}" \
+          --set-secrets APP_KEY=APP_KEY:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest \
+          --set-env-vars APP_ENV=production,APP_DEBUG=false,APP_URL=https://${_SERVICE}-${_REGION}.a.run.app,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=127.0.0.1,DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
           --cpu=1 \
           --memory=512Mi
 
@@ -72,17 +53,22 @@ steps:
           --image ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA \
           --region ${_REGION} \
           --service-account ${_RUN_SA} \
-          --add-cloudsql-instances ${_CONN_NAME} \
-          --set-secrets \
-            APP_KEY=APP_KEY:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest \
-          --set-env-vars \
-            APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=127.0.0.1,DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
+          --execution-environment gen2 \
+          --add-cloudsql-instances "${_CONN_NAME}" \
+          --set-secrets APP_KEY=APP_KEY:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest \
+          --set-env-vars APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=127.0.0.1,DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
           --command php \
           --args artisan,migrate,--force
 
   # 4) Ejecutar migraciones
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    args: ["run", "jobs", "execute", "ecoz-migrate", "--region", "${_REGION}"]
+    args:
+      - run
+      - jobs
+      - execute
+      - ecoz-migrate
+      - --region
+      - ${_REGION}
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
