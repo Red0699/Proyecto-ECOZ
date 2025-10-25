@@ -41,18 +41,29 @@ RUN npm ci || npm install \
 # ---- Stage 2: runtime (nginx + php-fpm) ----
 FROM php:8.2-fpm-bullseye AS runtime
 
-RUN apt-get update && apt-get install -y nginx supervisor libzip-dev libpng-dev \
-    libjpeg62-turbo-dev libfreetype6-dev \
- && docker-php-ext-configure gd --with-freetype --with-jpeg \
- && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql opcache zip intl \
- && rm -rf /var/lib/apt/lists/*
+# Paquetes del sistema para extensiones (incluye ICU para intl)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      nginx supervisor \
+      pkg-config \
+      libicu-dev \
+      libzip-dev \
+      libpng-dev \
+      libjpeg62-turbo-dev \
+      libfreetype6-dev \
+  && docker-php-ext-configure gd --with-freetype --with-jpeg \
+  && docker-php-ext-install -j"$(nproc)" gd pdo pdo_mysql opcache zip intl \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/www/html
+
+# Copiamos artefactos desde el builder (incluye vendor/ y public/build)
 COPY --from=builder /var/www/html /var/www/html
 
+# Permisos para Laravel
 RUN chown -R www-data:www-data storage bootstrap/cache && \
     chmod -R 775 storage bootstrap/cache
 
+# Nginx & Supervisord
 COPY ./deploy/nginx.conf /etc/nginx/nginx.conf
 COPY ./deploy/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
