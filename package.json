@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "gcp-build": "npm ci && npm run build && php -r \"file_exists('storage/app/public') || mkdir('storage/app/public', 0777, true);\""
   },
   "devDependencies": {
     "@babel/core": "7.23.9",
