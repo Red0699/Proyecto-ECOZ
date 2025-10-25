@@ -1,51 +1,65 @@
-FROM php:8.2.12-apache
+# ---- Stage 1: builder (composer + vite) ----
+FROM php:8.2-fpm-bullseye AS builder
 
-# 1) Apache: rewrite + docroot en /public
-RUN a2enmod rewrite
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
-    && sed -ri -e 's!:80>!:8080>!' /etc/apache2/sites-available/000-default.conf \
-    && sed -ri -e 's!<Directory /var/www/>!<Directory ${APACHE_DOCUMENT_ROOT}>!' /etc/apache2/apache2.conf
-
-# 2) Cloud Run usa 8080
-RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf
-EXPOSE 8080
-
-# 3) Dependencias del sistema para extensiones PHP
+# System deps
 RUN apt-get update && apt-get install -y \
-    git unzip curl \
-    libzip-dev \
-    libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
-    libxml2-dev \
- && rm -rf /var/lib/apt/lists/*
+    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev libicu-dev \
+    libpq-dev libjpeg-dev libfreetype6-dev libssl-dev nodejs npm \
+    && docker-php-ext-install pdo pdo_mysql opcache zip intl
 
-# 4) Extensiones PHP (orden recomendado)
-#    - zip (Spreadsheet lo usa)
-#    - gd (con soporte jpeg/freetype)
-#    - mbstring, xml
-#    - pdo_mysql
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
- && docker-php-ext-install -j$(nproc) \
-      pdo pdo_mysql zip gd mbstring xml
+# Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# App code
 WORKDIR /var/www/html
+COPY composer.json composer.lock* ./
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+# Copia el resto del proyecto
 COPY . .
 
-# 5) Composer (prod)
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+# Build de assets (usa tu script/stack de Vite)
+RUN npm ci && npm run build
 
-# 6) (Opcional) Vite. Si usas npm:
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-&& apt-get update && apt-get install -y nodejs \
-&& npm ci && npm run build || true
-#  # O Yarn:
-# RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-#  && apt-get update && apt-get install -y nodejs \
-#  && npm i -g yarn \
-#  && yarn install && yarn build || true
+# Optimización de Laravel
+RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
 
-# 7) Permisos Laravel
-RUN chown -R www-data:www-data storage bootstrap/cache
+# ---- Stage 2: runtime (nginx + php-fpm) ----
+FROM nginx:1.27-alpine AS nginxbase
+# Nginx base separado para copiar config al final
 
-CMD ["apache2-foreground"]
+FROM php:8.2-fpm-alpine AS runtime
+
+# Extensiones necesarias
+RUN docker-php-ext-install pdo pdo_mysql opcache
+
+# Opcional: ajustes de PHP para producción
+RUN { \
+  echo "opcache.enable=1"; \
+  echo "opcache.validate_timestamps=0"; \
+  echo "opcache.jit_buffer_size=100M"; \
+} > /usr/local/etc/php/conf.d/opcache.ini
+
+# Directorio app
+WORKDIR /var/www/html
+
+# Copia desde builder: vendor, public/build y app
+COPY --from=builder /var/www/html /var/www/html
+
+# Permisos de storage y cache
+RUN chown -R www-data:www-data storage bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache
+
+# Nginx + supervisord (para correr nginx y php-fpm en el mismo contenedor)
+RUN apk add --no-cache nginx supervisor
+
+# Nginx conf
+COPY ./deploy/nginx.conf /etc/nginx/nginx.conf
+
+# Supervisor conf
+COPY ./deploy/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Exponer puerto para Cloud Run
+EXPOSE 8080
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

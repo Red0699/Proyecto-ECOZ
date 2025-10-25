@@ -1,0 +1,70 @@
+# cloudbuild.yaml
+substitutions:
+  _REGION: us-central1
+  _SERVICE: ecoz-web
+  _REPO: ecoz-artifacts
+  _CONN_NAME: ecoz-project-2025:us-central1:ecoz-mysql
+  _DB_NAME: ecoz-db
+  _RUN_SA: ecoz-runner@ecoz-project-2025.iam.gserviceaccount.com
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+steps:
+  # 1) Build & push imagen a Artifact Registry
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
+      - .
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
+
+  # 2) Deploy a Cloud Run (usa secretos y socket Cloud SQL)
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -ceu
+      - |
+        gcloud run deploy ${_SERVICE} \
+          --image ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA \
+          --region ${_REGION} \
+          --platform managed \
+          --allow-unauthenticated \
+          --service-account ${_RUN_SA} \
+          --execution-environment gen2 \
+          --add-cloudsql-instances ${_CONN_NAME} \
+          --set-secrets \
+            APP_KEY=APP_KEY:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest \
+          --set-env-vars \
+            APP_ENV=production,APP_DEBUG=false,APP_URL=https://${_SERVICE}-${_REGION}.a.run.app,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=127.0.0.1,DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
+          --cpu=1 \
+          --memory=512Mi
+
+  # 3) Deploy del Job de migraciones (idempotente)
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -ceu
+      - |
+        gcloud run jobs deploy ecoz-migrate \
+          --image ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA \
+          --region ${_REGION} \
+          --service-account ${_RUN_SA} \
+          --add-cloudsql-instances ${_CONN_NAME} \
+          --set-secrets \
+            APP_KEY=APP_KEY:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest \
+          --set-env-vars \
+            APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=127.0.0.1,DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
+          --command php \
+          --args artisan,migrate,--force
+
+  # 4) Ejecutar migraciones
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    args: ["run", "jobs", "execute", "ecoz-migrate", "--region", "${_REGION}"]
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
