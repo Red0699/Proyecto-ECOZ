@@ -62,6 +62,7 @@ steps:
 
   # 4) Ejecutar migraciones
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
     args:
       - run
       - jobs
@@ -69,6 +70,7 @@ steps:
       - ecoz-migrate
       - --region
       - ${_REGION}
+      - --wait
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
