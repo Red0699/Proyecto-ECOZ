@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
   {
     
         $this->call(RoleSeeder::class);
-
+        $this->call(EstacionSeeder::class);
         
         $adminRole = Role::where('name', 'admin')->first();
 
@@ -30,7 +30,6 @@ class DatabaseSeeder extends Seeder
                 'estacion_id' => 1,
             ]);
         }
-
-        $this->call(EstacionSeeder::class);
+        $this->call(NormativasSeeder::class);
   }
 }
