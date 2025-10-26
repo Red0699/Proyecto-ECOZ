@@ -11,13 +11,19 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
-  # 1) Build & push imagen
+  # 1) Build & push imagen a Artifact Registry
   - name: gcr.io/cloud-builders/docker
-    args: ["build","-t","${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA","."]
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
+      - .
   - name: gcr.io/cloud-builders/docker
-    args: ["push","${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA"]
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
 
-  # 2) Deploy a Cloud Run (sin ASSET_URL de momento; assets servirán como rutas relativas)
+  # 2) Deploy a Cloud Run (usa secretos y socket Cloud SQL)
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: bash
     args:
@@ -33,20 +39,9 @@ steps:
           --execution-environment gen2 \
           --add-cloudsql-instances "${_CONN_NAME}" \
           --set-secrets APP_KEY=APP_KEY:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest \
-          --set-env-vars APP_ENV=production,APP_DEBUG=false,SESSION_SECURE_COOKIE=true,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=,DB_PORT=,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
-          --cpu=1 --memory=512Mi
-
-  # 2.1) Actualizar APP_URL (y opcionalmente ASSET_URL) con la URL REAL detectada
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: bash
-    args:
-      - -ceu
-      - |
-        SVC_URL="$(gcloud run services describe ${_SERVICE} --region ${_REGION} --format='value(status.url)')"
-        echo "Detected service URL: $$SVC_URL"
-        gcloud run services update ${_SERVICE} \
-          --region ${_REGION} \
-          --set-env-vars APP_URL="$$SVC_URL",ASSET_URL="$$SVC_URL",SESSION_SECURE_COOKIE=true
+          --set-env-vars APP_ENV=production,APP_DEBUG=false,APP_URL=https://${_SERVICE}-${_REGION}.a.run.app,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=,DB_PORT=,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
+          --cpu=1 \
+          --memory=512Mi
 
   # 3) Deploy del Job de migraciones (limpia caches y migra)
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -68,7 +63,14 @@ steps:
   # 4) Ejecutar migraciones y esperar a que terminen
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
-    args: ["run","jobs","execute","ecoz-migrate","--region","${_REGION}","--wait"]
+    args:
+      - run
+      - jobs
+      - execute
+      - ecoz-migrate
+      - --region
+      - ${_REGION}
+      - --wait
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
