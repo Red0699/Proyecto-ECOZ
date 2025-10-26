@@ -37,6 +37,8 @@ const LibsCssFiles = GetFilesArray('resources/assets/vendor/libs/**/*.css');
 const FontsScssFiles = GetFilesArray('resources/assets/vendor/fonts/**/!(_)*.scss');
 
 export default defineConfig({
+  base: '',
+  build: { outDir: 'public/build', manifest: true },
   plugins: [
     laravel({
       input: [
