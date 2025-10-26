@@ -47,7 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::redirect('/home', '/inicio', 301)->name('home.redirect');
 
     // Administración
-    Route::middleware('is.admin')->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware(['auth', 'is.admin'])->group(function () {
         Route::resource('usuarios', UserController::class);
     });
 
