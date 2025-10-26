@@ -39,11 +39,11 @@ steps:
           --execution-environment gen2 \
           --add-cloudsql-instances "${_CONN_NAME}" \
           --set-secrets APP_KEY=APP_KEY:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest \
-          --set-env-vars APP_ENV=production,APP_DEBUG=false,APP_URL=https://${_SERVICE}-${_REGION}.a.run.app,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=127.0.0.1,DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
+          --set-env-vars APP_ENV=production,APP_DEBUG=false,APP_URL=https://${_SERVICE}-${_REGION}.a.run.app,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=,DB_PORT=,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
           --cpu=1 \
           --memory=512Mi
 
-  # 3) Deploy del Job de migraciones (idempotente)
+  # 3) Deploy del Job de migraciones (limpia caches y migra)
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: bash
     args:
@@ -56,11 +56,11 @@ steps:
           --execution-environment gen2 \
           --set-cloudsql-instances "${_CONN_NAME}" \
           --set-secrets APP_KEY=APP_KEY:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest \
-          --set-env-vars APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=127.0.0.1,DB_PORT=3306,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
-          --command php \
-          --args artisan,migrate,--force
+          --set-env-vars APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=,DB_PORT=,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
+          --command bash \
+          --args -lc,"php artisan config:clear && php artisan cache:clear || true; php artisan migrate --force"
 
-  # 4) Ejecutar migraciones
+  # 4) Ejecutar migraciones y esperar a que terminen
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
     args:
