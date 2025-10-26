@@ -8,6 +8,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use App\Support\AlertsBuilder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,5 +40,9 @@ class AppServiceProvider extends ServiceProvider
             $view->with('navAlerts', $navAlerts);
             $view->with('navAlertsCount', count($navAlerts));
         });
+
+        if (app()->isProduction()) {
+            URL::forceScheme('https');
+        }
     }
 }
