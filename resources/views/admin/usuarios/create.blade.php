@@ -15,7 +15,7 @@
         <h5 class="mb-0">Datos del Usuario</h5>
       </div>
       <div class="card-body">
-        {{-- Simplemente incluimos nuestro formulario parcial --}}
+        
         @include('admin.usuarios._form')
       </div>
     </div>

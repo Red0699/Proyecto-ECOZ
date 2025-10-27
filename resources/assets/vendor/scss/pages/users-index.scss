@@ -1,0 +1,108 @@
+// users-index.scss
+@use 'sass:map';
+
+// Si tienes un archivo con variables de Materio, importa antes (opcional)
+// @import "../../_variables";
+
+.users-index {
+  .table-responsive {
+    overflow: visible;
+  }
+
+  .table-responsive { overflow-y: visible; }
+  // Tabla
+  .table thead th {
+    font-weight: 600;
+    color: var(--bs-gray-700);
+    border-top: none;
+    background: var(--bs-body-bg);
+  }
+
+  .table tbody tr:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.02);
+  }
+
+  // Avatar con iniciales
+  .avatar-initials {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    background: rgba(var(--bs-primary-rgb), 0.12);
+    color: var(--bs-primary);
+    text-transform: uppercase;
+  }
+  .avatar-ring {
+    outline: 2px solid rgba(var(--bs-primary-rgb), 0.18);
+    outline-offset: 2px;
+  }
+
+  // Chip estación
+  .chip-estacion {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8125rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(var(--bs-info-rgb), 0.1);
+    color: var(--bs-info);
+    border: 1px solid rgba(var(--bs-info-rgb), 0.25);
+    i {
+      font-size: 1rem;
+      line-height: 1;
+    }
+  }
+
+  // Badge por rol (mapea por data-role="admin", "operador-eds", etc.)
+  .role-badge {
+    text-transform: none;
+    border: 1px solid transparent;
+    &[data-role*='admin'] {
+      background: rgba(var(--bs-danger-rgb), 0.12);
+      color: var(--bs-danger);
+      border-color: rgba(var(--bs-danger-rgb), 0.22);
+    }
+    &[data-role*='operador'],
+    &[data-role*='usuario'] {
+      background: rgba(var(--bs-primary-rgb), 0.12);
+      color: var(--bs-primary);
+      border-color: rgba(var(--bs-primary-rgb), 0.22);
+    }
+    &[data-role*='visor'],
+    &[data-role*='consulta'] {
+      background: rgba(var(--bs-success-rgb), 0.12);
+      color: var(--bs-success);
+      border-color: rgba(var(--bs-success-rgb), 0.22);
+    }
+  }
+
+  // Toolbar
+  .users-search .form-control {
+    min-width: 260px;
+  }
+
+  // Ilustración de vacío
+  .empty-illustration {
+    width: 220px;
+    max-width: 60%;
+    opacity: 0.9;
+  }
+
+  // Botones ícono
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+    display: inline-grid;
+    place-items: center;
+  }
+
+  td.text-end .btn {
+    white-space: nowrap;
+  }
+  @media (max-width: 576px) {
+    td.text-end .d-inline-flex { flex-wrap: wrap; }
+  }
+}

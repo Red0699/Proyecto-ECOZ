@@ -8,109 +8,98 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use App\Models\Role;
+use App\Models\Estacion; // 👈 importar
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
-        $users = User::with('role')->paginate(10); 
+        $q   = $request->string('q')->toString();
+        $per = (int) $request->input('per_page', 10);
+
+        $users = User::with(['role', 'estacion'])
+            ->when($q, function ($qr) use ($q) {
+                $qr->where(function ($w) use ($q) {
+                    $w->where('name', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%")
+                        ->orWhereHas('estacion', fn($e) => $e->where('nombre', 'like', "%{$q}%"));
+                });
+            })
+            ->orderByDesc('id')
+            ->paginate($per);
+
         return view('admin.usuarios.index', compact('users'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+
     public function create()
     {
-        //
         $roles = Role::all();
-        return view('admin.usuarios.create', compact('roles'));
+        $estaciones = Estacion::orderBy('nombre')->get(); // 👈 cargar estaciones
+        return view('admin.usuarios.create', compact('roles', 'estaciones'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role_id' => 'required|exists:roles,id',
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|string|email|max:255|unique:users,email',
+            'password'  => ['required', 'confirmed', Rules\Password::defaults()],
+            'role_id'   => 'required|exists:roles,id',
+            'estacion_id' => 'required|integer|exists:estaciones,id',
         ]);
 
         User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role_id' => $request->role_id,
+            'name'        => $request->name,
+            'email'       => $request->email,
+            'password'    => Hash::make($request->password),
+            'role_id'     => $request->role_id,
+            'estacion_id' => $request->estacion_id,
         ]);
 
         return redirect()->route('usuarios.index')->with('success', 'Usuario creado exitosamente.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(User $user)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(User $usuario)
     {
-        //
         $roles = Role::all();
-        return view('admin.usuarios.edit', compact('usuario', 'roles'));
+        $estaciones = Estacion::orderBy('nombre')->get();
+        return view('admin.usuarios.edit', compact('usuario', 'roles', 'estaciones'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, User $usuario)
     {
-        //
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $usuario->id,
-            'role_id' => 'required|exists:roles,id',
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|string|email|max:255|unique:users,email,' . $usuario->id,
+            'role_id'   => 'required|exists:roles,id',
+            'estacion_id' => 'required|integer|exists:estaciones,id',
         ]);
 
         $usuario->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'role_id' => $request->role_id,
+            'name'        => $request->name,
+            'email'       => $request->email,
+            'role_id'     => $request->role_id,
+            'estacion_id' => $request->estacion_id,
         ]);
 
-        // Opcional: Actualizar contraseña solo si se proporciona una nueva
         if ($request->filled('password')) {
-            $request->validate(['password' => ['confirmed', Rules\Password::defaults()]]);
+            $request->validate([
+                'password' => ['confirmed', Rules\Password::defaults()],
+            ]);
             $usuario->update(['password' => Hash::make($request->password)]);
         }
 
         return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado exitosamente.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(User $user)
+    public function destroy(User $usuario)
     {
-        //
-        if (Auth::user()->id == $user->id) {
+        if (Auth::user()->id == $usuario->id) {
             return back()->with('error', 'No puedes eliminar tu propio usuario administrador.');
         }
-
-        $user->delete();
+        $usuario->delete();
         return back()->with('success', 'Usuario eliminado exitosamente.');
     }
 }

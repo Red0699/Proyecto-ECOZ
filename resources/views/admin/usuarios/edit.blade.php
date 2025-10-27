@@ -1,4 +1,3 @@
-{{-- resources/views/admin/usuarios/edit.blade.php --}}
 @extends('layouts/contentNavbarLayout')
 
 @section('title', 'Editar Usuario')
@@ -15,7 +14,6 @@
         <h5 class="mb-0">Datos de {{ $usuario->name }}</h5>
       </div>
       <div class="card-body">
-        {{-- Reutilizamos el mismo formulario. Blade pasará automáticamente la variable $usuario al partial. --}}
         @include('admin.usuarios._form')
       </div>
     </div>
