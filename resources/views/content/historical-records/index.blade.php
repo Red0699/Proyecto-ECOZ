@@ -82,7 +82,7 @@
 
   {{-- KPIs resumidos --}}
   <div class="row g-3 mb-3">
-    <div class="col-12 col-md-4">
+    <div class="col-12 col-md-6">
       <div class="hrx-kpi card">
         <div class="card-body">
           <div class="hrx-kpi-label">COV total</div>
@@ -90,7 +90,7 @@
         </div>
       </div>
     </div>
-    <div class="col-12 col-md-4">
+    <div class="col-12 col-md-6">
       <div class="hrx-kpi card">
         <div class="card-body">
           <div class="hrx-kpi-label">CO₂ total</div>
@@ -98,17 +98,7 @@
         </div>
       </div>
     </div>
-    <div class="col-12 col-md-4">
-      <div class="hrx-kpi card">
-        <div class="card-body">
-          <div class="hrx-kpi-label">Factor (CO₂/COV)</div>
-          <div class="hrx-kpi-value">
-            @if(!empty($kpis['factor_cov_to_co2'])) {{ number_format($kpis['factor_cov_to_co2'], 4) }} <span>kg</span>
-            @else — @endif
-          </div>
-        </div>
-      </div>
-    </div>
+    
   </div>
 
   {{-- Gráficas principales (Inventario, Presión, COV) --}}
