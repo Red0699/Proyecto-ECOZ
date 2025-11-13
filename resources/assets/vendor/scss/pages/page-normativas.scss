@@ -91,3 +91,35 @@
     padding: 1rem;
   }
 }
+
+/* Cards siempre informativas (paleta azul) */
+.norma-card__bar.is-info { background: #3b82f6; }          /* blue-500 */
+.norma-icon.is-info { background: #3b82f6; color: #fff; }
+
+.norma-chip { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
+.chip-info  { background: #e0f2fe; color: #075985; border-color: #bae6fd; }
+
+.norma-badge {
+  display:inline-block; padding:.18rem .5rem; border-radius:.5rem;
+  font-size:.75rem; font-weight:700; border:1px solid transparent;
+}
+.norma-badge.info { background:#eff6ff; color:#1d4ed8; border-color:rgba(29,78,216,.25); }
+
+/* Sanciones en modo informativo (sin rojo) */
+.sanctions-wrap { display:grid; gap:.75rem; }
+
+.sanction-item.info {
+  border: 1px dashed rgba(59,130,246,.35);     /* blue-500 dashed */
+  background: #f5f9ff;                         /* azul muy claro */
+  border-radius: .75rem; padding: .75rem .9rem;
+}
+.sanction-item__head { display:flex; align-items:center; justify-content:space-between; gap:.75rem; margin-bottom:.35rem; }
+.sanction-item__title { font-weight:600; font-size:.95rem; color:#1e3a8a; } /* blue-900 */
+.sanction-item__body { color:#374151; font-size:.9rem; line-height:1.4; }
+
+/* Chips de nivel: azules/grises (no rojos) */
+.san-chip { display:inline-block; border-radius:.5rem; padding:.18rem .55rem; font-size:.75rem; font-weight:700; border:1px solid transparent; }
+.san-chip.san-alta  { background:#dbeafe; color:#1e40af; border-color:#bfdbfe; }  /* alto pero sin rojo */
+.san-chip.san-media { background:#e0f2fe; color:#075985; border-color:#bae6fd; }
+.san-chip.san-baja  { background:#ecfeff; color:#155e75; border-color:#cffafe; }
+
