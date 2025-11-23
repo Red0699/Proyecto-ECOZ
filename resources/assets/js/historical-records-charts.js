@@ -5,44 +5,44 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof ApexCharts === 'undefined') return;
 
   const S = window.series || { labels: [] };
-  const F = window.filterMeta || {};
+  const F = window.filterMeta || { mode: 'custom' };
 
-  // Paleta amplia
+  // ---- Helpers -------------------------------------------------------------
   const PALETTE = [
-    '#1A73E8',
-    '#E91E63',
-    '#00C853',
-    '#FF9800',
-    '#8E24AA',
-    '#00BCD4',
-    '#9C27B0',
-    '#43A047',
-    '#F4511E',
-    '#3F51B5',
-    '#FDD835',
-    '#26A69A',
-    '#5C6BC0',
-    '#EC407A',
-    '#7CB342'
+    '#1A73E8','#E91E63','#00C853','#FF9800','#8E24AA',
+    '#00BCD4','#9C27B0','#43A047','#F4511E','#3F51B5',
+    '#FDD835','#26A69A','#5C6BC0','#EC407A','#7CB342'
   ];
   const colorsFor = (n, start = 0) => Array.from({ length: n }, (_, i) => PALETTE[(i + start) % PALETTE.length]);
 
-  const labels = Array.isArray(S.labels)
+  // labels: array seguro
+  const rawLabels = Array.isArray(S.labels)
     ? S.labels
     : S.labels && typeof S.labels === 'object'
       ? Object.values(S.labels)
       : [];
 
-  const toNum = arr => {
+  // Mostrar meses bonitos cuando es anual
+  const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const prettyMonth = (ym) => {
+    // ym = 'YYYY-MM'
+    const m = String(ym).split('-')[1];
+    const idx = m ? (parseInt(m,10)-1) : null;
+    return idx!=null && idx>=0 && idx<12 ? MONTHS[idx] : ym;
+  };
+  const labels = (F.mode === 'year')
+    ? rawLabels.map(prettyMonth)
+    : rawLabels;
+
+  const toNum = (arr) => {
     if (!arr) return [];
-    const vals = Array.isArray(arr) ? arr : typeof arr === 'object' ? Object.values(arr) : [];
+    const vals = Array.isArray(arr) ? arr : (typeof arr === 'object' ? Object.values(arr) : []);
     return vals.map(v => (v === null || v === '' || isNaN(Number(v)) ? null : Number(v)));
   };
 
-  const yFmt = v => (Math.abs(v) < 1e-9 ? '0' : Number(v).toFixed(2));
+  const yFmt = v => (v == null || isNaN(v) ? '' : Number(v).toFixed(2));
   const noData = { text: 'Sin datos', align: 'center' };
-
-  const axesFor = cats => ({
+  const baseAxes = (cats) => ({
     xaxis: { type: 'category', categories: cats, labels: { rotate: 0 } },
     yaxis: { labels: { formatter: yFmt } },
     tooltip: {
@@ -53,67 +53,84 @@ document.addEventListener('DOMContentLoaded', () => {
     grid: { strokeDashArray: 4 }
   });
 
-  // 1) INVENTARIO: Pie (distribución por período)
+  // ---- SERIES (todas numéricas) -------------------------------------------
+  const inv   = toNum(S.inventario);
+  const psi   = toNum(S.psi_max);
+  const cov   = toNum(S.cov_kg);
+  const vEvap = toNum(S.var_evap_gl);
+  const vTot  = toNum(S.var_total_gl);
+
+  // ---- Inventario ----------------------------------------------------------
+  // Anual -> línea; otros -> pastel
   if (document.querySelector('#invChart')) {
-    const data = toNum(S.inventario);
-    new ApexCharts(document.querySelector('#invChart'), {
-      chart: { type: 'pie', height: 340, toolbar: { show: false } },
-      series: data,
-      labels: labels,
-      colors: colorsFor(data.length),
-      legend: {
-        position: 'right',
-        formatter: (val, opts) => `${val}: ${(data[opts.seriesIndex] ?? 0).toFixed(2)} gl`
-      },
-      dataLabels: {
-        enabled: true,
-        formatter: val => `${val.toFixed(1)}%`
-      },
+    if (F.mode === 'year' || inv.length <= 1) {
+      new ApexCharts(document.querySelector('#invChart'), {
+        chart: { type: 'line', height: 320, toolbar: { show: false } },
+        series: [{ name: 'Inventario (gl, prom.)', data: inv }],
+        colors: [PALETTE[0]],
+        stroke: { width: 3, curve: 'smooth' },
+        markers: { size: 3, colors: [PALETTE[0]], strokeColors: '#fff', strokeWidth: 2 },
+        dataLabels: { enabled: false },
+        ...baseAxes(labels),
+        noData
+      }).render();
+    } else {
+      new ApexCharts(document.querySelector('#invChart'), {
+        chart: { type: 'pie', height: 340, toolbar: { show: false } },
+        series: inv,
+        labels,
+        colors: colorsFor(inv.length),
+        legend: {
+          position: 'right',
+          formatter: (val, opts) => `${val}: ${(inv[opts.seriesIndex] ?? 0).toFixed(2)} gl`
+        },
+        dataLabels: { enabled: true, formatter: val => `${val.toFixed(1)}%` },
+        noData
+      }).render();
+    }
+  }
+
+  // ---- Presión -------------------------------------------------------------
+  if (document.querySelector('#presionChart')) {
+    new ApexCharts(document.querySelector('#presionChart'), {
+      chart: { type: 'line', height: 300, toolbar: { show: false } },
+      series: [{ name: (F.mode==='year'?'Psi máx. mensual':'Psi máx.'), data: psi }],
+      colors: [PALETTE[3]],
+      stroke: { width: 3, curve: 'smooth' },
+      markers: { size: 3, colors: [PALETTE[3]], strokeColors: '#fff', strokeWidth: 2 },
+      dataLabels: { enabled: false },
+      ...baseAxes(labels),
       noData
     }).render();
   }
 
-  // 2) PRESIÓN: línea
-  if (document.querySelector('#presionChart')) {
-    new ApexCharts(document.querySelector('#presionChart'), {
-      chart: { type: 'line', height: 300, toolbar: { show: false } },
-      series: [{ name: 'Psi máximo', data: toNum(S.psi_max) }],
-      colors: [PALETTE[3]],
-      stroke: { width: 3, curve: 'smooth' },
-      markers: { size: 3, colors: [PALETTE[3]], strokeColors: '#fff', strokeWidth: 2 },
-      ...axesFor(labels),
-      noData,
-      dataLabels: { enabled: false }
-    }).render();
-  }
-
-  // 3) COV: barras distribuidas
+  // ---- COV -----------------------------------------------------------------
   if (document.querySelector('#covChart')) {
-    const data = toNum(S.cov_kg);
     new ApexCharts(document.querySelector('#covChart'), {
       chart: { type: 'bar', height: 300, toolbar: { show: false } },
-      series: [{ name: 'COV', data }],
-      colors: colorsFor(data.length, 5),
+      series: [{ name: (F.mode==='year'?'COV mensual (kg)':'COV (kg)'), data: cov }],
+      colors: colorsFor(cov.length, 5),
       plotOptions: { bar: { distributed: true, borderRadius: 6 } },
-      ...axesFor(labels),
-      noData,
-      dataLabels: { enabled: false }
+      dataLabels: { enabled: false },
+      ...baseAxes(labels),
+      noData
     }).render();
   }
 
-  // --- NUEVO: Variación/Pérdida de galonaje (columnas agrupadas) ---
+  // ---- Variación / Pérdida de galonaje ------------------------------------
   if (document.querySelector('#variacionChart')) {
-    const varChart = new ApexCharts(document.querySelector('#variacionChart'), {
-      chart: { type: 'bar', height: 280, toolbar: { show: false } },
+    new ApexCharts(document.querySelector('#variacionChart'), {
+      chart: { type: 'bar', height: 300, toolbar: { show: false } },
       series: [
-        { name: 'Por Evaporación (gl)', data: S.var_evap_gl || [] },
-        { name: 'Total EDS (gl)', data: S.var_total_gl || [] }
+        { name: (F.mode==='year'?'Por evaporación (mensual)':'Por evaporación'), data: vEvap },
+        { name: (F.mode==='year'?'Total EDS (mensual)':'Total EDS'), data: vTot }
       ],
-      xaxis: { categories: S.labels || [] },
+      colors: [PALETTE[1], PALETTE[2]],
       plotOptions: { bar: { columnWidth: '45%', endingShape: 'rounded' } },
       dataLabels: { enabled: false },
-      legend: { position: 'top' }
-    });
-    varChart.render();
+      legend: { position: 'top' },
+      ...baseAxes(labels),
+      noData
+    }).render();
   }
 });
