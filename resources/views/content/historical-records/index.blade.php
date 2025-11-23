@@ -31,12 +31,19 @@
         @endif
       </div>
     </div>
-    <a href="{{ route('registro-historico.pdf', request()->all()) }}" class="btn btn-outline-secondary">
-      <i class="ri-file-pdf-2-line me-1"></i> PDF
-    </a>
+    <form method="GET" action="{{ route('registro-historico.pdf') }}">
+      <input type="hidden" name="mode"  value="{{ $mode }}">
+      <input type="hidden" name="year"  value="{{ (int)$year }}">
+      <input type="hidden" name="month" value="{{ (int)$month }}">
+      <input type="hidden" name="from"  value="{{ $from }}">
+      <input type="hidden" name="to"    value="{{ $to }}">
+      <button class="btn btn-outline-secondary" type="submit">
+        <i class="ri-file-pdf-2-line me-1"></i> PDF
+      </button>
+    </form>
   </div>
 
-  {{-- Filtros profesionales --}}
+  {{-- Filtros --}}
   <div class="card mb-3 shadow-sm">
     <div class="card-body">
       <form class="row g-3 align-items-end" method="GET" action="{{ route('registro-historico') }}">
@@ -80,7 +87,7 @@
     </div>
   </div>
 
-  {{-- KPIs resumidos --}}
+  {{-- KPIs --}}
   <div class="row g-3 mb-3">
     <div class="col-12 col-md-6">
       <div class="hrx-kpi card">
@@ -98,10 +105,9 @@
         </div>
       </div>
     </div>
-    
   </div>
 
-  {{-- Gráficas principales (Inventario, Presión, COV) --}}
+  {{-- Inventario --}}
   <div class="card mb-3 shadow-sm">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-2">
@@ -125,10 +131,19 @@
       <div class="card h-100 shadow-sm">
         <div class="card-body">
           <h6 class="mb-2">COV (kg)</h6>
-        <div id="covChart"></div>
+          <div id="covChart"></div>
         </div>
       </div>
     </div>
   </div>
+
+  {{-- NUEVA: Variación/Pérdida de galonaje --}}
+  <div class="card mt-3 shadow-sm">
+    <div class="card-body">
+      <h6 class="mb-2">Pérdida / variación de galonaje (gl)</h6>
+      <div id="variacionChart"></div>
+    </div>
+  </div>
+
 </div>
 @endsection

@@ -62,7 +62,7 @@ class HomeController extends Controller
             $aggAll = (clone $base)
                 ->selectRaw("
                     fecha,
-                    SUM(perdidas_totales_cov_kg) AS cov_sum,
+                    AVG(perdidas_totales_cov_kg) AS cov_sum,
                     AVG(presion_psi)              AS psi_avg
                 ")
                 ->groupBy('fecha')

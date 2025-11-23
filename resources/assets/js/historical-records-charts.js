@@ -8,15 +8,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const F = window.filterMeta || {};
 
   // Paleta amplia
-  const PALETTE = ['#1A73E8','#E91E63','#00C853','#FF9800','#8E24AA','#00BCD4','#9C27B0','#43A047','#F4511E','#3F51B5','#FDD835','#26A69A','#5C6BC0','#EC407A','#7CB342'];
+  const PALETTE = [
+    '#1A73E8',
+    '#E91E63',
+    '#00C853',
+    '#FF9800',
+    '#8E24AA',
+    '#00BCD4',
+    '#9C27B0',
+    '#43A047',
+    '#F4511E',
+    '#3F51B5',
+    '#FDD835',
+    '#26A69A',
+    '#5C6BC0',
+    '#EC407A',
+    '#7CB342'
+  ];
   const colorsFor = (n, start = 0) => Array.from({ length: n }, (_, i) => PALETTE[(i + start) % PALETTE.length]);
 
-  const labels = Array.isArray(S.labels) ? S.labels :
-    (S.labels && typeof S.labels === 'object' ? Object.values(S.labels) : []);
+  const labels = Array.isArray(S.labels)
+    ? S.labels
+    : S.labels && typeof S.labels === 'object'
+      ? Object.values(S.labels)
+      : [];
 
   const toNum = arr => {
     if (!arr) return [];
-    const vals = Array.isArray(arr) ? arr : (typeof arr === 'object' ? Object.values(arr) : []);
+    const vals = Array.isArray(arr) ? arr : typeof arr === 'object' ? Object.values(arr) : [];
     return vals.map(v => (v === null || v === '' || isNaN(Number(v)) ? null : Number(v)));
   };
 
@@ -48,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       dataLabels: {
         enabled: true,
-        formatter: (val) => `${val.toFixed(1)}%`
+        formatter: val => `${val.toFixed(1)}%`
       },
       noData
     }).render();
@@ -80,5 +99,21 @@ document.addEventListener('DOMContentLoaded', () => {
       noData,
       dataLabels: { enabled: false }
     }).render();
+  }
+
+  // --- NUEVO: Variación/Pérdida de galonaje (columnas agrupadas) ---
+  if (document.querySelector('#variacionChart')) {
+    const varChart = new ApexCharts(document.querySelector('#variacionChart'), {
+      chart: { type: 'bar', height: 280, toolbar: { show: false } },
+      series: [
+        { name: 'Por Evaporación (gl)', data: S.var_evap_gl || [] },
+        { name: 'Total EDS (gl)', data: S.var_total_gl || [] }
+      ],
+      xaxis: { categories: S.labels || [] },
+      plotOptions: { bar: { columnWidth: '45%', endingShape: 'rounded' } },
+      dataLabels: { enabled: false },
+      legend: { position: 'top' }
+    });
+    varChart.render();
   }
 });
