@@ -71,5 +71,28 @@ steps:
       - ${_REGION}
       - --wait
 
+  # 5) Crear/actualizar y ejecutar job para storage:link
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -ceu
+      - |
+        IMAGE="$(gcloud run services describe ${_SERVICE} --region ${_REGION} \
+          --format='value(spec.template.spec.containers[0].image)')"
+
+        gcloud run jobs deploy ecoz-storage-link \
+          --image "${IMAGE}" \
+          --region "${_REGION}" \
+          --service-account ${_RUN_SA} \
+          --execution-environment gen2 \
+          --set-cloudsql-instances "${_CONN_NAME}" \
+          --set-secrets APP_KEY=APP_KEY:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest \
+          --set-env-vars APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stderr,LOG_LEVEL=warning,DB_CONNECTION=mysql,DB_HOST=,DB_PORT=,DB_DATABASE=${_DB_NAME},DB_SOCKET=/cloudsql/${_CONN_NAME} \
+          --command php \
+          --args artisan,storage:link
+
+        gcloud run jobs execute ecoz-storage-link --region "${_REGION}" --wait
+
+
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
