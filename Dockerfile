@@ -67,6 +67,9 @@ WORKDIR /var/www/html
 # Copiar artefactos construidos (app + vendor + public/build)
 COPY --from=builder /var/www/html /var/www/html
 
+# Crear el symlink public/storage -> storage/app/public durante la construcción
+RUN php artisan storage:link || true
+
 # Permisos para Laravel
 RUN chown -R www-data:www-data storage bootstrap/cache && \
     chmod -R 775 storage bootstrap/cache
