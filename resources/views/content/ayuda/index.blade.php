@@ -105,7 +105,13 @@ $manualUrl = file_exists($candidate) ? asset('storage/manuals/manual.pdf') : nul
           <ul class="list-group list-group-flush">
             <li class="list-group-item d-flex justify-content-between align-items-center small">
               Guía rápida (PDF)
-              <span class="badge bg-primary rounded-pill">Descargar</span>
+              @if(!empty($manualUrl))
+              <a class="badge bg-primary rounded-pill"
+                href="{{ $manualUrl }}"
+                download="Manual_ECO2Z.pdf">Descargar</a>
+              @else
+              <span class="text-muted">No disponible</span>
+              @endif
             </li>
             <li class="list-group-item d-flex justify-content-between align-items-center small">
               Preguntas frecuentes
