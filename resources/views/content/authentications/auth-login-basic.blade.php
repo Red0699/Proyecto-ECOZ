@@ -5,13 +5,20 @@
 @section('page-style')
 @vite(['resources/assets/vendor/scss/pages/page-auth.scss'])
 <style>
-  .field-error{
-    margin-bottom:.35rem;
-    font-size:.875rem;
-    color:#dc3545;
+  .field-error {
+    margin-bottom: .35rem;
+    font-size: .875rem;
+    color: #dc3545;
   }
-  .form-label{ margin-bottom:.35rem; }
-  .input-group .form-control.is-invalid{ border-color:#dc3545; box-shadow:0 0 0 .2rem rgba(220,53,69,.08); }
+
+  .form-label {
+    margin-bottom: .35rem;
+  }
+
+  .input-group .form-control.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 .2rem rgba(220, 53, 69, .08);
+  }
 </style>
 @endsection
 
@@ -34,19 +41,19 @@
 
           {{-- Errores generales no asociados a un campo --}}
           @if ($errors->any())
-            @php
-              $nonFieldErrors = collect($errors->all())
-                ->reject(fn($e) => str_contains(Str::lower($e), 'correo') || str_contains(Str::lower($e), 'contraseña'));
-            @endphp
-            @if($nonFieldErrors->isNotEmpty())
-              <div class="alert alert-danger mb-4">
-                <ul class="mb-0">
-                  @foreach ($nonFieldErrors as $error)
-                    <li>{{ $error }}</li>
-                  @endforeach
-                </ul>
-              </div>
-            @endif
+          @php
+          $nonFieldErrors = collect($errors->all())
+          ->reject(fn($e) => str_contains(Str::lower($e), 'correo') || str_contains(Str::lower($e), 'contraseña'));
+          @endphp
+          @if($nonFieldErrors->isNotEmpty())
+          <div class="alert alert-danger mb-4">
+            <ul class="mb-0">
+              @foreach ($nonFieldErrors as $error)
+              <li>{{ $error }}</li>
+              @endforeach
+            </ul>
+          </div>
+          @endif
           @endif
 
           <form id="formAuthentication" class="mb-5" method="POST" action="{{ route('login.post') }}">
@@ -63,8 +70,7 @@
                 placeholder="usuario@ejemplo.com"
                 value="{{ old('email') }}"
                 autofocus
-                autocomplete="username"
-              >
+                autocomplete="username">
             </div>
 
             {{-- PASSWORD --}}
@@ -78,8 +84,7 @@
                   name="password"
                   placeholder="••••••••"
                   aria-describedby="password"
-                  autocomplete="current-password"
-                />
+                  autocomplete="current-password" />
               </div>
             </div>
 
@@ -89,8 +94,7 @@
                 <label class="form-check-label" for="remember-me">Recuérdame</label>
               </div>
 
-              {{-- Ajusta a tu ruta real de “forgot password” --}}
-              <a href="" class="float-end mb-1">
+              <a href="{{ route('forgot.show') }}" class="float-end mb-1">
                 <span>Olvidé mi contraseña</span>
               </a>
             </div>

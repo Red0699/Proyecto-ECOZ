@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\ForgotController;
 use App\Http\Controllers\HistoricalRecordController;
 use App\Http\Controllers\DataController;
 use App\Http\Controllers\NormativaController;
@@ -21,6 +22,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])
         ->middleware('throttle:6,1') // 6 intentos por minuto
         ->name('login.post');
+
+    Route::get('/forgot-password', [ForgotController::class, 'show'])->name('forgot.show');
+    Route::post('/forgot-password', [ForgotController::class, 'submit'])->name('forgot.submit');
 });
 
 
